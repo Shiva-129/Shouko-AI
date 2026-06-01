@@ -1,0 +1,97 @@
+# ==========================================
+# PaperBrain AI — Master Gitignore
+# ==========================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv
+venv/
+ENV/
+env/
+.pytest_cache/
+.cache/
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.hypothesis/
+test.pdf
+
+# --- Node / Frontend (Next.js) ---
+node_modules/
+/apps/web/node_modules/
+.next/
+/apps/web/.next/
+out/
+build/
+tsconfig.tsbuildinfo
+.vercel/
+.npm
+.yarn
+
+# --- Environment & Secrets (Security First) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.pem
+*.key
+*.cert
+secrets.json
+
+# --- SQLite & Local Databases ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- System & OS Clutter ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# --- IDE & Editors ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# --- Temporary/Draft Assets ---
+paperbrain_canvas_drag_*.webp
+
+# --- Carousel Assets (Do Not Push to GitHub) ---
+carousel/
+docs/
+CLAUDE.md
+PaperBrain .docx
