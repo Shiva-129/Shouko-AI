@@ -17,6 +17,7 @@ celery_app.conf.update(
     enable_utc=True,
     task_track_started=True,
     imports=[
-        "tasks.digest_tasks"
+        "tasks.digest_tasks",
+        "tasks.generate_artifact",
     ]
 )

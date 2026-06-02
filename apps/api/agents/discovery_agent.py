@@ -2,7 +2,7 @@ import json
 from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.llm_service import LLMService
-from prompts.discovery import SYSTEM_PROMPT, build_user_prompt
+from prompts.discovery import SYSTEM_PROMPT, build_user_prompt, DiscoveryOutput
 from core.config import settings
 
 
@@ -47,6 +47,20 @@ class DiscoveryAgent:
     ) -> list[dict]:
         prompt = build_user_prompt(profile, papers_data)
 
+        # Primary: Groq (fast, free, we have the key)
+        if self._groq_client:
+            try:
+                raw = await self._score_with_groq(prompt)
+                raw = raw.strip()
+                raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                scores = json.loads(raw)
+                if isinstance(scores, list):
+                    self._validate_scores(scores)
+                    return scores
+            except Exception as e:
+                print(f"[DiscoveryAgent] Groq scoring failed: {e}")
+
+        # Fallback: LLMService (Gemini via OpenRouter)
         try:
             raw = await self.llm.generate_completion(
                 system_prompt=SYSTEM_PROMPT,
@@ -58,26 +72,20 @@ class DiscoveryAgent:
             raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
             scores = json.loads(raw)
             if isinstance(scores, list):
+                self._validate_scores(scores)
                 return scores
         except Exception as e:
             print(f"[DiscoveryAgent] LLMService scoring failed: {e}")
 
-        if self._groq_client:
-            try:
-                raw = await self._score_with_groq(prompt)
-                raw = raw.strip()
-                raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-                scores = json.loads(raw)
-                if isinstance(scores, list):
-                    return scores
-            except Exception as e:
-                print(f"[DiscoveryAgent] Groq scoring failed: {e}")
-
         return self._score_fallback(papers_data, profile)
+
+    def _validate_scores(self, scores: list[dict]):
+        for s in scores:
+            DiscoveryOutput(**s)
 
     async def _score_with_groq(self, prompt: str) -> str:
         response = await self._groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=4096,

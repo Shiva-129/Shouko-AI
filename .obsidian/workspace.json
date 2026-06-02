@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "29c676eb2d039355",
+        "id": "8431fb82fbdee04f",
         "type": "tabs",
         "children": [
           {
-            "id": "edd77060fe1ff681",
+            "id": "a38584b7f39029e8",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -177,8 +177,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "6aead502be1bc8bd",
+  "active": "a38584b7f39029e8",
   "lastOpenFiles": [
+    "apps/web/node_modules/tailwindcss-animate/README.md",
     "Untitled 2.base",
     "Untitled 1.base",
     "Untitled.base"

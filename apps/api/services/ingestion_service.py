@@ -3,7 +3,7 @@ import os
 import tempfile
 import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from models.paper import Paper
 from models.chunk import PaperChunk
 from services.pdf_service import PDFService
@@ -61,7 +61,7 @@ class IngestionService:
             print(f"[IngestionService] Registering chunks in database...")
             # Clean up old chunks if they existed
             await db.execute(
-                db.delete(PaperChunk).where(PaperChunk.paper_id == paper.id)
+                delete(PaperChunk).where(PaperChunk.paper_id == paper.id)
             )
 
             db_chunks = []

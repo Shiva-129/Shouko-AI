@@ -24,7 +24,7 @@ class Artifact(Base):
     
     paper_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
-        ForeignKey("papers.id"), 
+        ForeignKey("papers.id", ondelete="CASCADE"), 
         nullable=False
     )
     
@@ -59,8 +59,8 @@ class Artifact(Base):
         server_default="'{}'::uuid[]"
     )
     
-    # Vector column representing 1536-dimensional embeddings
-    embedding = mapped_column(Vector(1536), nullable=True)
+    # Vector column representing 384-dimensional embeddings (all-MiniLM-L6-v2)
+    embedding = mapped_column(Vector(384), nullable=True)
     
     status: Mapped[str] = mapped_column(
         String, 

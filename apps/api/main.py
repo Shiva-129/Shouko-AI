@@ -44,11 +44,14 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # Include Routers
-from routers import papers, chat, users, digests
+from routers import papers, chat, users, digests, artifacts, billing, collections
 app.include_router(papers.router)
 app.include_router(chat.router)
 app.include_router(users.router)
 app.include_router(digests.router)
+app.include_router(artifacts.router)
+app.include_router(billing.router)
+app.include_router(collections.router)
 
 
 @app.get("/health", tags=["System"])

@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = ""
     GROQ_API_KEY: str = ""
     RESEND_API_KEY: str = ""
+    
+    STRIPE_API_KEY: str = "mock-stripe-key"
+    STRIPE_WEBHOOK_SECRET: str = "mock-webhook-secret"
+    STRIPE_PRO_PRICE_ID: str = "price_mockpropriceid"
+    FRONTEND_URL: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
         env_file=".env",

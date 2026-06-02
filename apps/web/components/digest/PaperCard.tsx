@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FileText, Sparkles, Building2, Clock } from "lucide-react";
+import { FileText, Sparkles, Building2, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCreateArtifact } from "@/lib/hooks/useArtifact";
+import { useState } from "react";
 
 interface PaperCardProps {
   paper_id?: string;
@@ -33,6 +35,8 @@ function getCategoryStyle(cat: string) {
 
 export function PaperCard({ paper_id, title, abstract, category, match_score, reason }: PaperCardProps) {
   const router = useRouter();
+  const createArtifact = useCreateArtifact();
+  const [creating, setCreating] = useState(false);
   const score = getScoreBadge(match_score);
   const catStyle = getCategoryStyle(category);
 
@@ -89,12 +93,24 @@ export function PaperCard({ paper_id, title, abstract, category, match_score, re
           {paper_id && (
             <Button
               className="font-mono text-[10px] bg-lime text-[#0D0D0D] hover:bg-lime/90 h-auto px-3 py-1 font-bold"
-              onClick={(e) => {
+              disabled={creating}
+              onClick={async (e) => {
                 e.stopPropagation();
-                router.push(`/artifact/${paper_id}`);
+                setCreating(true);
+                try {
+                  const artifact = await createArtifact.mutateAsync(paper_id);
+                  router.push(`/artifact/${artifact.id}`);
+                } catch {
+                  setCreating(false);
+                }
               }}
             >
-              Create Artifact
+              {creating ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Sparkles className="h-3 w-3 mr-1" />
+              )}
+              {creating ? "Creating..." : "Create Artifact"}
             </Button>
           )}
         </div>

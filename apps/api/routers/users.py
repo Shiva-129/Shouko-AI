@@ -6,7 +6,6 @@ from core.dependencies import get_db
 from core.security import get_current_user
 from core.usage import get_monthly_count, get_daily_count, MONTHLY_LIMITS, DAILY_LIMITS
 from models.user import User
-from models.usage import UsageEvent
 
 router = APIRouter(
     prefix="/users",
@@ -52,8 +51,6 @@ async def get_current_user_profile(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    from core.usage import get_monthly_count, get_daily_count, MONTHLY_LIMITS, DAILY_LIMITS
-
     plan = user.plan or "free"
     usage = {
         "artifact_created_monthly": await get_monthly_count(db, user.id, "artifact_created"),
@@ -71,8 +68,8 @@ async def get_current_user_profile(
         avatar_url=user.avatar_url,
         plan=user.plan,
         interest_profile=user.interest_profile or {},
-        onboarded_at=str(user.onboarded_at) if user.onboarded_at else None,
-        created_at=str(user.created_at),
+        onboarded_at=user.onboarded_at.isoformat() if user.onboarded_at else None,
+        created_at=user.created_at.isoformat() if user.created_at else None,
         usage=usage,
     )
 
@@ -110,7 +107,7 @@ async def update_current_user_profile(
         avatar_url=user.avatar_url,
         plan=user.plan,
         interest_profile=user.interest_profile or {},
-        onboarded_at=str(user.onboarded_at) if user.onboarded_at else None,
-        created_at=str(user.created_at),
+        onboarded_at=user.onboarded_at.isoformat() if user.onboarded_at else None,
+        created_at=user.created_at.isoformat() if user.created_at else None,
         usage=usage,
     )

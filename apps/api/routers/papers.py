@@ -5,6 +5,7 @@ from sqlalchemy import select
 from core.dependencies import get_db
 from core.security import get_current_user
 from core.usage import log_usage_event, check_usage_limit
+from core.rate_limit import RateLimit
 from models.paper import Paper
 from models.user import User
 from services.ingestion_service import IngestionService
@@ -27,7 +28,7 @@ class PaperIngestResponse(BaseModel):
     status: str
     chunks_count: int
 
-@router.post("/ingest", response_model=PaperIngestResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/ingest", response_model=PaperIngestResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimit(limit=10, window=60, name="paper_ingest"))])
 async def ingest_paper_endpoint(
     payload: PaperIngestRequest,
     db: AsyncSession = Depends(get_db),
@@ -66,6 +67,9 @@ async def ingest_paper_endpoint(
         ingestion_service = IngestionService()
         ingest_result = await ingestion_service.ingest_paper(db, paper.id, payload.pdf_url)
         
+        await log_usage_event(db, user.id, "paper_ingested", {"paper_id": str(paper.id)})
+        await db.commit()
+
         return PaperIngestResponse(
             paper_id=str(paper.id),
             title=paper.title,
@@ -73,8 +77,6 @@ async def ingest_paper_endpoint(
             status=ingest_result["status"],
             chunks_count=ingest_result["chunks_count"]
         )
-        
-        await log_usage_event(db, user.id, "paper_ingested", {"paper_id": str(paper.id)})
 
     except HTTPException:
         raise

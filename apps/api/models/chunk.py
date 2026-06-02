@@ -33,8 +33,7 @@ class PaperChunk(Base):
     page_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     
-    # Embedding is required and is 1536-dimensional Vector
-    embedding = mapped_column(Vector(1536), nullable=False)
+    embedding = mapped_column(Vector(384), nullable=False)
     
     meta_data: Mapped[dict] = mapped_column(
         JSONB, 

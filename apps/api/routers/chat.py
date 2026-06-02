@@ -6,6 +6,7 @@ from sqlalchemy import select
 from core.dependencies import get_db
 from core.security import get_current_user
 from core.usage import log_usage_event, check_usage_limit
+from core.rate_limit import RateLimit
 from models.artifact import Artifact
 from models.conversation import Conversation
 from models.user import User
@@ -22,7 +23,7 @@ router = APIRouter(
 class ChatRequest(BaseModel):
     message: str = Field(..., description="The user's query or question about the paper")
 
-@router.post("/{artifact_id}/chat")
+@router.post("/{artifact_id}/chat", dependencies=[Depends(RateLimit(limit=20, window=60, name="chat"))])
 async def chat_sse_endpoint(
     artifact_id: str,
     payload: ChatRequest,
@@ -35,9 +36,10 @@ async def chat_sse_endpoint(
     token-by-token using Server-Sent Events (SSE).
     """
     try:
-        # 1. Fetch artifact and verify it exists
         artifact_uuid = uuid.UUID(artifact_id)
-        result = await db.execute(select(Artifact).where(Artifact.id == artifact_uuid))
+        result = await db.execute(
+            select(Artifact).where(Artifact.id == artifact_uuid, Artifact.user_id == user.id)
+        )
         artifact = result.scalar_one_or_none()
         
         if not artifact:
@@ -108,12 +110,11 @@ async def chat_sse_endpoint(
                 updated_history.append({"role": "user", "content": payload.message})
                 updated_history.append({"role": "assistant", "content": full_response})
                 
-                # Update DB state
+                await log_usage_event(db, user.id, "question_asked", {"artifact_id": artifact_id})
+
                 conversation.messages = updated_history
                 conversation.message_count = len(updated_history)
                 await db.commit()
-
-                await log_usage_event(db, user.id, "question_asked", {"artifact_id": artifact_id})
 
                 yield "data: [DONE]\n\n"
 

@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from models.chunk import PaperChunk
 from services.embedding_service import EmbeddingService
+from prompts.rag_qa import SYSTEM_PROMPT, build_user_prompt
 
 class RAGService:
     def __init__(self):
@@ -43,36 +44,4 @@ class RAGService:
         """
         Assembles the system instruction and context-rich prompt for the LLM.
         """
-        system_prompt = (
-            "You are PaperBrain-AI, a world-class academic research intelligence assistant.\n"
-            "Your objective is to provide highly precise, technical, and scientifically accurate answers "
-            "based strictly on the extracted context chunks of the academic paper provided.\n\n"
-            "Rules:\n"
-            "1. Ground your answers thoroughly in the provided text snippets.\n"
-            "2. If the context does not contain enough information to answer a question, state this clearly while providing "
-            "related context about the scientific domain if available.\n"
-            "3. Use LaTeX formatting for mathematical expressions where appropriate (e.g. $E = mc^2$ or $$E=mc^2$$)."
-        )
-
-        # Build context string
-        context_str = ""
-        for i, c in enumerate(context_chunks):
-            context_str += f"--- CONTEXT CHUNK #{i+1} (Page {c['page_number']}, Section: {c['section']}) ---\n"
-            context_str += f"{c['content']}\n\n"
-
-        # Build history log
-        history_str = ""
-        for msg in history[-6:]:  # Keep last 6 interactions
-            role_label = "User" if msg["role"] == "user" else "Assistant"
-            history_str += f"{role_label}: {msg['content']}\n"
-
-        user_prompt = (
-            f"Here is the context extracted from the academic paper:\n\n"
-            f"{context_str}"
-            f"Here is our recent conversation history:\n"
-            f"{history_str}\n"
-            f"Current Question: {query}\n\n"
-            f"Provide a structured, deep academic answer:"
-        )
-
-        return system_prompt, user_prompt
+        return SYSTEM_PROMPT, build_user_prompt(query, context_chunks, history)

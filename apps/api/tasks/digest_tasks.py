@@ -51,29 +51,31 @@ async def async_scan_daily_research_papers():
         client = arxiv.Client()
         search = arxiv.Search(
             query=query_str,
-            max_results=5,
+            max_results=100,
             sort_by=arxiv.SortCriterion.SubmittedDate
         )
 
         ingested_count = 0
         try:
             for result in client.results(search):
-                # Check if paper already exists
+                arxiv_id = result.entry_id.split("/")[-1].split("v")[0] if result.entry_id else None
                 existing_res = await db.execute(
-                    select(Paper).where(Paper.title == result.title)
+                    select(Paper).where(
+                        (Paper.arxiv_id == arxiv_id) | (Paper.title == result.title)
+                    )
                 )
                 if existing_res.scalar_one_or_none():
                     continue
 
-                # Register new metadata record
                 paper = Paper(
+                    arxiv_id=arxiv_id,
                     title=result.title,
                     authors=[a.name for a in result.authors],
                     abstract=result.summary,
                     pdf_url=result.pdf_url,
-                    categories=[result.primary_category] if result.primary_category else [],
+                    categories=list(result.categories) if result.categories else [],
                     published_date=result.published.date() if result.published else None,
-                    pdf_processed=True
+                    pdf_processed=False
                 )
                 db.add(paper)
                 ingested_count += 1

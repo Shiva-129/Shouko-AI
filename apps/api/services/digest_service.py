@@ -1,4 +1,5 @@
 import datetime
+from datetime import timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from models.user import User
@@ -23,7 +24,7 @@ class DigestService:
             print(f"[DigestService] User {user_id} not found.")
             return None
 
-        cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=48)
+        cutoff = datetime.datetime.now(timezone.utc) - datetime.timedelta(hours=48)
         papers_res = await self.db.execute(
             select(Paper).where(Paper.created_at >= cutoff)
         )
@@ -102,7 +103,7 @@ class DigestService:
 
         if email_sent:
             digest.status = "sent"
-            digest.email_sent_at = datetime.datetime.utcnow()
+            digest.email_sent_at = datetime.datetime.now(timezone.utc)
         else:
             digest.status = "ready"
 

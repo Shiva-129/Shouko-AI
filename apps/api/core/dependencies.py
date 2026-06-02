@@ -15,6 +15,9 @@ class MockUser:
         self.email = email
         self.name = name
         self.plan = plan
+        self.avatar_url = None
+        self.onboarded_at = None
+        self.created_at = "2026-01-01T00:00:00+00:00"
         self.interest_profile = {
             "topics": ["Transformers", "Neural Networks"],
             "keywords": ["Attention", "Transformer"],
