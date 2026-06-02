@@ -8,7 +8,7 @@ from sqlalchemy import select
 from models.user import User
 from models.paper import Paper
 from services.digest_service import DigestService
-from services.ingestion_service import IngestionService
+from agents.discovery_agent import DiscoveryAgent
 
 def run_async(coro):
     """
@@ -52,7 +52,7 @@ async def async_scan_daily_research_papers():
         search = arxiv.Search(
             query=query_str,
             max_results=5,
-            sort_by=arxiv.SortBy.SubmittedDate
+            sort_by=arxiv.SortCriterion.SubmittedDate
         )
 
         ingested_count = 0
@@ -71,9 +71,9 @@ async def async_scan_daily_research_papers():
                     authors=[a.name for a in result.authors],
                     abstract=result.summary,
                     pdf_url=result.pdf_url,
-                    category=result.primary_category,
-                    published_at=result.published,
-                    status="completed"  # Pre-compiled abstract ingest
+                    categories=[result.primary_category] if result.primary_category else [],
+                    published_date=result.published.date() if result.published else None,
+                    pdf_processed=True
                 )
                 db.add(paper)
                 ingested_count += 1

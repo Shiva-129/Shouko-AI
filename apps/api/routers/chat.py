@@ -4,8 +4,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from core.dependencies import get_db
+from core.security import get_current_user
+from core.usage import log_usage_event, check_usage_limit
 from models.artifact import Artifact
 from models.conversation import Conversation
+from models.user import User
 from services.rag_service import RAGService
 from services.llm_service import LLMService
 import json
@@ -23,7 +26,8 @@ class ChatRequest(BaseModel):
 async def chat_sse_endpoint(
     artifact_id: str,
     payload: ChatRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Submit a technical question about a paper artifact. 
@@ -42,12 +46,15 @@ async def chat_sse_endpoint(
                 detail=f"Artifact with ID {artifact_id} not found."
             )
 
+        allowed, msg = await check_usage_limit(db, user, "question_asked")
+        if not allowed:
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=msg)
+
         # 2. Retrieve or create conversation record
-        # In a real app we'd query by artifact_id and user_id.
         conv_result = await db.execute(
             select(Conversation).where(
                 Conversation.artifact_id == artifact.id,
-                Conversation.user_id == artifact.user_id
+                Conversation.user_id == user.id
             )
         )
         conversation = conv_result.scalar_one_or_none()
@@ -55,7 +62,7 @@ async def chat_sse_endpoint(
         if not conversation:
             conversation = Conversation(
                 artifact_id=artifact.id,
-                user_id=artifact.user_id,
+                user_id=user.id,
                 messages=[]
             )
             db.add(conversation)
@@ -106,7 +113,8 @@ async def chat_sse_endpoint(
                 conversation.message_count = len(updated_history)
                 await db.commit()
 
-                # Signal end of stream
+                await log_usage_event(db, user.id, "question_asked", {"artifact_id": artifact_id})
+
                 yield "data: [DONE]\n\n"
 
             except Exception as inner_e:

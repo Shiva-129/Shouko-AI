@@ -3,7 +3,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from core.dependencies import get_db
+from core.security import get_current_user
+from core.usage import log_usage_event, check_usage_limit
 from models.paper import Paper
+from models.user import User
 from services.ingestion_service import IngestionService
 import uuid
 
@@ -27,7 +30,8 @@ class PaperIngestResponse(BaseModel):
 @router.post("/ingest", response_model=PaperIngestResponse, status_code=status.HTTP_201_CREATED)
 async def ingest_paper_endpoint(
     payload: PaperIngestRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Trigger the PDF ingestion flow. 
@@ -35,6 +39,10 @@ async def ingest_paper_endpoint(
     into searchable chunks, and generates 1536-dimensional semantic search vectors.
     """
     try:
+        allowed, msg = await check_usage_limit(db, user, "paper_ingested")
+        if not allowed:
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=msg)
+
         # Check if paper with this PDF URL or ArXiv ID already exists
         query = select(Paper).where(Paper.pdf_url == payload.pdf_url)
         if payload.arxiv_id:
@@ -66,6 +74,10 @@ async def ingest_paper_endpoint(
             chunks_count=ingest_result["chunks_count"]
         )
         
+        await log_usage_event(db, user.id, "paper_ingested", {"paper_id": str(paper.id)})
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

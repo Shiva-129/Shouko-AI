@@ -5,85 +5,80 @@ from models.user import User
 from models.paper import Paper
 from models.digest import DailyDigest
 from services.email_service import EmailService
+from agents.discovery_agent import DiscoveryAgent
+
 
 class DigestService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.email_service = EmailService()
+        self.discovery_agent = DiscoveryAgent(db)
 
-    async def compile_user_daily_digest(self, user_id, date: datetime.date) -> DailyDigest | None:
-        """
-        Retrieves recent papers, matches them against the user interest profile,
-        compiles a DailyDigest and dispatches it via email.
-        """
-        # 1. Load user
+    async def compile_user_daily_digest(
+        self, user_id, date: datetime.date
+    ) -> DailyDigest | None:
         user_res = await self.db.execute(select(User).where(User.id == user_id))
         user = user_res.scalar_one_or_none()
         if not user:
             print(f"[DigestService] User {user_id} not found.")
             return None
 
-        # 2. Query recent papers ingested in the last 48 hours
         cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=48)
         papers_res = await self.db.execute(
             select(Paper).where(Paper.created_at >= cutoff)
         )
         papers = papers_res.scalars().all()
         if not papers:
-            print("[DigestService] No recent papers ingested for recommendations.")
+            print("[DigestService] No recent papers.")
             return None
 
-        # 3. Match interests
         profile = user.interest_profile or {}
-        interests = [t.lower() for t in profile.get("topics", [])]
-        categories = [c.lower() for c in profile.get("categories", [])]
-        keywords = [k.lower() for k in profile.get("keywords", [])]
 
-        paper_scores = []
-        recommendations = []
-
-        for paper in papers:
-            score = 50  # Base score
-            matched_reason = "General Discovery"
-
-            # Check matches
-            category_match = any(c in paper.category.lower() for c in categories) if paper.category else False
-            title_text = f"{paper.title} {paper.abstract}".lower()
-            keyword_match = any(k in title_text for k in keywords)
-
-            if category_match:
-                score += 25
-                matched_reason = "Interest Category Match"
-            if keyword_match:
-                score += 20
-                matched_reason = "Keyword Match"
-
-            # Normalize to max 99
-            score = min(score, 99)
-
-            if score >= 60 or len(paper_scores) < 3:
-                paper_scores.append({
-                    "paper_id": str(paper.id),
-                    "score": score,
-                    "reason": matched_reason
-                })
-                recommendations.append({
-                    "title": paper.title,
-                    "abstract": paper.abstract or "No abstract provided.",
-                    "category": paper.category or "General",
-                    "match_score": score,
-                    "url": f"http://localhost:3000/workspaces/{paper.id}"
-                })
+        paper_scores = await self.discovery_agent.score_papers(papers, profile)
 
         if not paper_scores:
-            print(f"[DigestService] No relevant papers matched user {user.email}'s interests today.")
+            paper_scores = self.discovery_agent._score_fallback(
+                [
+                    {
+                        "paper_id": str(p.id),
+                        "title": p.title,
+                        "abstract": (p.abstract or "")[:500],
+                        "authors": p.authors,
+                        "categories": p.categories,
+                    }
+                    for p in papers
+                ],
+                profile,
+            )
+
+        min_score = 50
+        scored_ids = {s["paper_id"] for s in paper_scores if s["score"] >= min_score}
+        paper_map = {str(p.id): p for p in papers}
+
+        filtered = [s for s in paper_scores if s["paper_id"] in scored_ids]
+        filtered.sort(key=lambda x: x["score"], reverse=True)
+
+        if not filtered:
+            print(f"[DigestService] No papers scored >= {min_score} for {user.email}.")
             return None
 
-        # 4. Check for existing daily digest to prevent duplicate sends
+        recommendations = []
+        for s in filtered:
+            p = paper_map.get(s["paper_id"])
+            if p:
+                recommendations.append({
+                    "title": p.title,
+                    "abstract": p.abstract or "No abstract provided.",
+                    "category": p.categories[0] if p.categories else "General",
+                    "match_score": s["score"],
+                    "reason": s.get("reason", ""),
+                    "paper_id": s["paper_id"],
+                })
+
         existing_res = await self.db.execute(
             select(DailyDigest).where(
                 DailyDigest.user_id == user.id,
-                DailyDigest.date == date
+                DailyDigest.date == date,
             )
         )
         digest = existing_res.scalar_one_or_none()
@@ -92,26 +87,24 @@ class DigestService:
             digest = DailyDigest(
                 user_id=user.id,
                 date=date,
-                paper_scores=paper_scores,
-                paper_count=len(paper_scores),
-                status="pending"
+                paper_scores=filtered,
+                paper_count=len(filtered),
+                status="pending",
             )
             self.db.add(digest)
             await self.db.flush()
 
-        # 5. Dispatch email
         email_sent = await self.email_service.send_digest(
             to_email=user.email,
             user_name=user.name or user.email.split("@")[0],
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
         if email_sent:
             digest.status = "sent"
             digest.email_sent_at = datetime.datetime.utcnow()
         else:
-            digest.status = "ready"  # Ready to be retried later
+            digest.status = "ready"
 
         await self.db.commit()
-        print(f"[DigestService] Digest generation & email pipeline finished with status: {digest.status}")
         return digest

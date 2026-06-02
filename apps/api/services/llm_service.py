@@ -1,5 +1,5 @@
 import asyncio
-import os
+import json
 from typing import AsyncGenerator
 from openai import AsyncOpenAI
 from anthropic import AsyncAnthropic
@@ -116,5 +116,45 @@ class LLMService:
         words = response.split(" ")
         for w in words:
             yield w + " "
-            # Control token generation velocity
             await asyncio.sleep(0.04)
+
+    async def generate_completion(
+        self,
+        system_prompt: str,
+        prompt: str,
+        temperature: float = 0.3,
+        max_tokens: int = 4096,
+        model_override: str | None = None,
+    ) -> str:
+        if self.client and self.provider in ("gemini", "openrouter"):
+            try:
+                response = await self.client.chat.completions.create(
+                    model=model_override or self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return response.choices[0].message.content or ""
+            except Exception as e:
+                print(f"[LLMService] {self.provider.upper()} completion error: {e}")
+
+        elif self.client and self.provider == "anthropic":
+            try:
+                response = await self.client.messages.create(
+                    model=model_override or self.model,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return response.content[0].text
+            except Exception as e:
+                print(f"[LLMService] Anthropic completion error: {e}")
+
+        print("[LLMService] No LLM configured, using mock completion.")
+        return json.dumps([
+            {"paper_id": "mock-1", "score": 75, "reason": "Sample scoring (mock mode)"}
+        ])

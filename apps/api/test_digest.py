@@ -17,8 +17,8 @@ async def run_digest_test():
     try:
         async with AsyncSessionLocal() as db:
             # 1. Register Mock User
-            mock_user_id = uuid.uuid4()
-            user_email = "test_researcher@paperbrain.ai"
+            mock_user_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
+            user_email = "mock@paperbrain.app"
 
             # Check if test user already exists
             from sqlalchemy import select
@@ -51,9 +51,8 @@ async def run_digest_test():
                 authors=["Ashish Vaswani", "Noam Shazeer"],
                 abstract="We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
                 pdf_url="https://arxiv.org/pdf/1706.03762.pdf",
-                category="cs.CL",
-                status="completed",
-                published_at=datetime.datetime.utcnow(),
+                categories=["cs.CL"],
+                published_date=datetime.date.today(),
                 created_at=datetime.datetime.utcnow()
             )
 
@@ -63,9 +62,8 @@ async def run_digest_test():
                 authors=["Jianlin Su", "Yu Lu"],
                 abstract="Rotary Position Embedding (RoPE) encodes relative positional information in self-attention mechanisms with absolute position representations.",
                 pdf_url="https://arxiv.org/pdf/2104.09864.pdf",
-                category="cs.LG",
-                status="completed",
-                published_at=datetime.datetime.utcnow(),
+                categories=["cs.LG"],
+                published_date=datetime.date.today(),
                 created_at=datetime.datetime.utcnow()
             )
 

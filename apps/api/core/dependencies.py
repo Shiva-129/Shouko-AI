@@ -1,15 +1,23 @@
-from fastapi import Header, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
-from core.exceptions import UnauthorizedException
+import uuid
+
 
 class MockUser:
-    def __init__(self, id: str = "00000000-0000-0000-0000-000000000000", email: str = "mock@paperbrain.app"):
+    def __init__(
+        self,
+        id: str = "00000000-0000-0000-0000-000000000000",
+        email: str = "mock@paperbrain.app",
+        name: str | None = "Mock User",
+        plan: str = "free",
+    ):
         self.id = id
         self.email = email
-
-async def get_current_user(authorization: str = Header(default="Bearer mock-token")) -> MockUser:
-    if not authorization.startswith("Bearer "):
-        raise UnauthorizedException(message="Invalid authorization token format")
-    # For scaffolding, return a mock user. Later this verifies the Supabase JWT.
-    return MockUser()
+        self.name = name
+        self.plan = plan
+        self.interest_profile = {
+            "topics": ["Transformers", "Neural Networks"],
+            "keywords": ["Attention", "Transformer"],
+            "authors": [],
+            "categories": ["cs.CL", "cs.LG"],
+        }
