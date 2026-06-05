@@ -8,6 +8,10 @@ from core.config import settings
 from core.database import get_db
 from main import app
 
+from sqlalchemy import text
+from core.database import Base
+import models  # Ensure all models are registered
+
 # Dedicated test engine with NullPool to prevent connection reuse issues
 test_engine = create_async_engine(
     settings.DATABASE_URL,
@@ -20,6 +24,16 @@ test_sessionmaker = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False
 )
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def setup_db(event_loop):
+    async with test_engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
 
 @pytest.fixture(scope="session")
 def event_loop():
