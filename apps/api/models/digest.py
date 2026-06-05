@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, DateTime, Date, ForeignKey, UniqueConstraint, CheckConstraint, func
+from sqlalchemy import String, Integer, DateTime, Date, ForeignKey, UniqueConstraint, CheckConstraint, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from core.database import Base
 import datetime
@@ -27,7 +27,7 @@ class DailyDigest(Base):
         JSONB, 
         nullable=False, 
         default=list,
-        server_default="'[]'::jsonb"
+        server_default=text("'[]'::jsonb")
     )
     
     paper_count: Mapped[int] = mapped_column(

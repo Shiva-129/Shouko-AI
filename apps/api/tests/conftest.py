@@ -7,9 +7,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from core.config import settings
 from core.database import get_db
 from main import app
-
+import uuid
 from sqlalchemy import text
 from core.database import Base
+from models.user import User
 import models  # Ensure all models are registered
 
 # Dedicated test engine with NullPool to prevent connection reuse issues
@@ -29,7 +30,19 @@ test_sessionmaker = async_sessionmaker(
 async def setup_db(event_loop):
     async with test_engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"))
         await conn.run_sync(Base.metadata.create_all)
+        
+    async with test_sessionmaker() as session:
+        default_user = User(
+            id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
+            email="mock@paperbrain.app",
+            name="Mock User",
+            plan="free"
+        )
+        session.add(default_user)
+        await session.commit()
+        
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)

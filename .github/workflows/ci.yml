@@ -49,6 +49,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r apps/api/requirements.txt
 
+    - name: Enable PostgreSQL Extensions
+      env:
+        PGPASSWORD: supersecretpassword
+      run: |
+        psql -h localhost -U paperbrain -d paperbrain -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
+
     - name: Run Backend Tests
       env:
         DATABASE_URL: postgresql+asyncpg://paperbrain:supersecretpassword@localhost:5432/paperbrain

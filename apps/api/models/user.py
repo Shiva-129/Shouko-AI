@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, DateTime, func, CheckConstraint
+from sqlalchemy import String, DateTime, func, CheckConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from core.database import Base
 import datetime
@@ -27,7 +27,7 @@ class User(Base):
         JSONB, 
         nullable=False, 
         default=lambda: {"topics": [], "keywords": [], "authors": [], "categories": []},
-        server_default='{"topics": [], "keywords": [], "authors": [], "categories": []}'
+        server_default=text("'{\"topics\": [], \"keywords\": [], \"authors\": [], \"categories\": []}'::jsonb")
     )
     
     onboarded_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, ForeignKey, func
+from sqlalchemy import String, Integer, ForeignKey, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from pgvector.sqlalchemy import Vector
 from core.database import Base
@@ -39,5 +39,5 @@ class PaperChunk(Base):
         JSONB, 
         nullable=False, 
         default=dict,
-        server_default="'{}'::jsonb"
+        server_default=text("'{}'::jsonb")
     )
