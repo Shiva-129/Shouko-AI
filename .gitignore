@@ -14,8 +14,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# env/lib, venv/lib, etc. are ignored via their parent directory.
+# Only ignore root lib directory if needed:
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -112,7 +114,6 @@ paperbrain_canvas_drag_*.webp
 
 # --- Carousel Assets (Do Not Push to GitHub) ---
 carousel/
-docs/
 CLAUDE.md
 **/CLAUDE.md
 PaperBrain .docx

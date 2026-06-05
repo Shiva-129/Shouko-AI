@@ -9,7 +9,7 @@ async def test_get_current_user_profile_authorized(client):
     assert response.status_code == 200
     data = response.json()
     assert "email" in data
-    assert data["email"] == "mock@paperbrain.app"
+    assert data["email"] == "mock@shouko-ai.app"
 
 @pytest.mark.asyncio
 async def test_patch_user_profile(client):

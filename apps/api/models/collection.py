@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Boolean, DateTime, ARRAY, func
+from sqlalchemy import String, Boolean, DateTime, ARRAY, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.schema import ForeignKey
 from core.database import Base
@@ -35,7 +35,7 @@ class Collection(Base):
         ARRAY(UUID(as_uuid=True)), 
         nullable=False, 
         default=list,
-        server_default="'{}'::uuid[]"
+        server_default=text("'{}'::uuid[]")
     )
     
     is_default: Mapped[bool] = mapped_column(

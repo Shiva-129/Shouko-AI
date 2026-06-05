@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Integer, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Integer, DateTime, ForeignKey, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from core.database import Base
 import datetime
@@ -31,7 +31,7 @@ class Conversation(Base):
         JSONB, 
         nullable=False, 
         default=list,
-        server_default="'[]'::jsonb"
+        server_default=text("'[]'::jsonb")
     )
     
     message_count: Mapped[int] = mapped_column(

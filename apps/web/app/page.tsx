@@ -18,8 +18,8 @@ export default function LandingPage() {
           <div className="h-8 w-8 rounded-lg bg-lime/10 flex items-center justify-center border border-lime/20">
             <Brain className="h-4.5 w-4.5 text-lime" />
           </div>
-          <span className="font-syne font-extrabold text-xl tracking-tight">
-            PaperBrain <span className="text-lime">AI</span>
+          <span className="font-syne font-extrabold text-lg tracking-tight">
+            Shouko <span className="text-lime">AI</span>
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -48,8 +48,8 @@ export default function LandingPage() {
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime to-violet">Interactive Knowledge</span>
         </h1>
 
-        <p className="text-sm md:text-lg text-secondaryText font-sans max-w-2xl mb-12 leading-relaxed">
-          Ingest dense PDFs, extract structured insights via Kimi K2.6, and chat with your entire library using pgvector-powered RAG. Your personalized AI research assistant.
+        <p className="text-sm md:text-base text-slate-400 font-mono max-w-xl mb-10 leading-relaxed">
+          Shouko-AI automatically discovers recent papers, ingests and chunks PDFs, extracts structured insights, and lets you chat with your entire library via context-aware RAG agents.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-5">
@@ -191,18 +191,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border mt-auto py-10 z-10 bg-workspace">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2 opacity-50">
-            <Brain className="h-4 w-4 text-primaryText" />
-            <span className="font-syne font-bold text-sm tracking-tight text-primaryText">
-              PaperBrain AI
-            </span>
-          </div>
-          <p className="text-[11px] font-mono text-tertiaryText">
-            © 2026 PaperBrain. Empowering academic exploration with multi-agent infrastructure.
-          </p>
-        </div>
+      <footer className="border-t border-slate-900/80 py-8 text-center text-[10px] font-mono text-slate-600 z-10">
+        © 2026 Shouko-AI. Crafted for advanced academic exploration.
       </footer>
     </div>
   );

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, DateTime, ForeignKey, CheckConstraint, func
+from sqlalchemy import String, DateTime, ForeignKey, CheckConstraint, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from core.database import Base
 import datetime
@@ -27,7 +27,7 @@ class UsageEvent(Base):
         JSONB, 
         nullable=False, 
         default=dict,
-        server_default="'{}'::jsonb"
+        server_default=text("'{}'::jsonb")
     )
     
     created_at: Mapped[datetime.datetime] = mapped_column(

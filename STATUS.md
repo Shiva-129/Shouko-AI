@@ -1,4 +1,4 @@
-# PaperBrain AI — Status
+# Shouko-AI — Status
 
 ## Sprint 1 ✅ Foundation & Auth (DONE)
 - Alembic migrations + 9 models (pgvector, UUID, FKs)

@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     APP_SECRET_KEY: str = "supersecret32characterkeyforjwtencodinganddecoding"
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
-    DATABASE_URL: str = "postgresql+asyncpg://paperbrain:supersecretpassword@localhost:5432/paperbrain"
+    DATABASE_URL: str = "postgresql+asyncpg://shouko:supersecretpassword@localhost:5432/shouko"
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_KEY: str = ""
 

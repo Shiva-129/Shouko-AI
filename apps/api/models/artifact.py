@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, DateTime, Numeric, ForeignKey, UniqueConstraint, CheckConstraint, ARRAY, func
+from sqlalchemy import String, Integer, DateTime, Numeric, ForeignKey, UniqueConstraint, CheckConstraint, ARRAY, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from pgvector.sqlalchemy import Vector
 from core.database import Base
@@ -35,28 +35,28 @@ class Artifact(Base):
         JSONB, 
         nullable=False, 
         default=list,
-        server_default="'[]'::jsonb"
+        server_default=text("'[]'::jsonb")
     )
     
     auto_qa: Mapped[list] = mapped_column(
         JSONB, 
         nullable=False, 
         default=list,
-        server_default="'[]'::jsonb"
+        server_default=text("'[]'::jsonb")
     )
     
     suggested_experiments: Mapped[list] = mapped_column(
         JSONB, 
         nullable=False, 
         default=list,
-        server_default="'[]'::jsonb"
+        server_default=text("'[]'::jsonb")
     )
     
     related_paper_ids: Mapped[list[uuid.UUID]] = mapped_column(
         ARRAY(UUID(as_uuid=True)), 
         nullable=False, 
         default=list,
-        server_default="'{}'::uuid[]"
+        server_default=text("'{}'::uuid[]")
     )
     
     # Vector column representing 2048-dimensional embeddings (nvidia/llama-nemotron-embed-vl-1b-v2)

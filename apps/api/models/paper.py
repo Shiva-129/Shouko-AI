@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Boolean, DateTime, Date, func, CheckConstraint, ARRAY
+from sqlalchemy import String, Integer, Boolean, DateTime, Date, func, CheckConstraint, ARRAY, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from core.database import Base
 import datetime
@@ -24,14 +24,14 @@ class Paper(Base):
         JSONB, 
         nullable=False, 
         default=list,
-        server_default="'[]'::jsonb"
+        server_default=text("'[]'::jsonb")
     )
     
     categories: Mapped[list[str]] = mapped_column(
         ARRAY(String), 
         nullable=False, 
         default=list,
-        server_default="'{}'::text[]"
+        server_default=text("'{}'::text[]")
     )
     
     published_date: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
@@ -58,7 +58,7 @@ class Paper(Base):
         JSONB, 
         nullable=False, 
         default=dict,
-        server_default="'{}'::jsonb"
+        server_default=text("'{}'::jsonb")
     )
     
     pdf_processed: Mapped[bool] = mapped_column(

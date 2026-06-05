@@ -1,4 +1,4 @@
-# PaperBrain — Implementation Status Master Report
+# Shouko-AI — Implementation Status Master Report
 
 > Generated 2026-06-01. Maps every document-planned feature against actual code.
 

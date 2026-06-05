@@ -7,7 +7,7 @@ class MockUser:
     def __init__(
         self,
         id: str = "00000000-0000-0000-0000-000000000000",
-        email: str = "mock@paperbrain.app",
+        email: str = "mock@shouko-ai.app",
         name: str | None = "Mock User",
         plan: str = "free",
     ):

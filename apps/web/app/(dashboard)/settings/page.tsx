@@ -95,7 +95,7 @@ export default function SettingsPage() {
                   <>
                     <h3 className="font-bold text-sm text-primaryText flex items-center gap-1.5">
                       <Sparkles className="h-4 w-4 text-lime animate-pulse" />
-                      PaperBrain Pro Active
+                      Shouko-AI Pro Active
                     </h3>
                     <p className="text-xs text-secondaryText mt-1">
                       You have unlimited access to AI summaries, ingestion, and chat.

@@ -1,8 +1,8 @@
-# PaperBrain AI — MVP Roadmap Plan
+# Shouko-AI — MVP Roadmap Plan
 
 ## Context
 
-PaperBrain is ~30% complete. The backend has solid foundations (9 SQLAlchemy models, 7 services, 2 API endpoints, Celery tasks, Docker Compose). The frontend is a single 1404-line mock page with no real components or routing. The docs are comprehensive (~2,800 lines) but the code gaps are large: no auth, no agents, no artifact generation, no billing, no tests, no deployment.
+Shouko-AI is ~30% complete. The backend has solid foundations (9 SQLAlchemy models, 7 services, 2 API endpoints, Celery tasks, Docker Compose). The frontend is a single 1404-line mock page with no real components or routing. The docs are comprehensive (~2,800 lines) but the code gaps are large: no auth, no agents, no artifact generation, no billing, no tests, no deployment.
 
 This plan creates a realistic 6-sprint roadmap (~14 weeks) that builds on what exists to reach a shippable MVP with the complete core loop: **discover → ingest → artifact → chat → upgrade**.
 
@@ -520,11 +520,11 @@ UPDATE: apps/web/app/(dashboard)/settings/page.tsx (add billing link)
 3. **Railway deployment**
    - 3 services: `api`, `celery-worker`, `celery-beat`
    - Environment variables configured
-   - Custom domain: `api.paperbrain.app`
+   - Custom domain: `api.shouko-ai.app`
 
 4. **Vercel deployment**
    - Connect GitHub repo, env vars configured
-   - Custom domain: `paperbrain.app`
+   - Custom domain: `shouko-ai.app`
 
 5. **GitHub Actions** — `.github/workflows/` (new dir)
    - `test.yml`: run pytest on PR
