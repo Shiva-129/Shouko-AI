@@ -112,7 +112,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="justify-center">
           <p className="text-xs text-secondaryText">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <a href="/signup" className="text-lime hover:underline">
               Sign up
             </a>

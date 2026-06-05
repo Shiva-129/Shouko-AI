@@ -67,7 +67,7 @@ export function UpgradeModal({
 
         <div className="space-y-4 py-3 relative">
           <h4 className="text-xs font-mono uppercase tracking-wider text-secondaryText/80 font-bold">
-            What's included in Pro:
+            What&apos;s included in Pro:
           </h4>
           
           <ul className="space-y-2.5">
