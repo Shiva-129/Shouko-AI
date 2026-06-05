@@ -35,7 +35,7 @@ export function UsageBanner({ limitType }: UsageBannerProps) {
               Nearing Limit: {limitType}
             </h4>
             <p className="text-xs text-secondaryText font-mono mt-1 max-w-2xl leading-relaxed">
-              You've consumed more than 80% of your current usage tier for {limitType}. Upgrade to the Pro plan to guarantee uninterrupted research capabilities and remove all daily/monthly limits.
+              You&apos;ve consumed more than 80% of your current usage tier for {limitType}. Upgrade to the Pro plan to guarantee uninterrupted research capabilities and remove all daily/monthly limits.
             </p>
             <div className="flex items-center gap-3 mt-3">
               <Button

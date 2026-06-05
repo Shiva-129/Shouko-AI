@@ -114,7 +114,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <Sparkles className="h-5 w-5 text-lime" />
             <h2 className="font-syne font-bold text-xl text-primaryText tracking-tight">
-              Today's Digest
+              Today&apos;s Digest
             </h2>
           </div>
           {digest && (
