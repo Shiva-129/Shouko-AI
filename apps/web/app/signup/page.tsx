@@ -63,7 +63,7 @@ export default function SignupPage() {
           </div>
           <CardTitle className="text-lg text-primaryText">Create your account</CardTitle>
           <CardDescription className="text-secondaryText">
-            Join PaperBrain and transform how you read research
+            Join Shouko-AI and transform how you read research
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

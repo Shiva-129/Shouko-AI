@@ -1,7 +1,7 @@
-# PaperBrain — API Reference
+# Shouko-AI — API Reference
 
 > All endpoints use JSON. Auth via Bearer token (Supabase JWT) in Authorization header.
-> Base URL: `https://api.paperbrain.app/v1`
+> Base URL: `https://api.shouko-ai.app/v1`
 
 ---
 

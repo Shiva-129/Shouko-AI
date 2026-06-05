@@ -59,7 +59,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-lg text-primaryText">Welcome back</CardTitle>
           <CardDescription className="text-secondaryText">
-            Sign in to your PaperBrain account
+            Sign in to your Shouko-AI account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

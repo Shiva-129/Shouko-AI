@@ -1,4 +1,4 @@
-# PaperBrain — Environment Variables Reference
+# Shouko-AI — Environment Variables Reference
 
 > Complete list of all environment variables needed to run the project.
 > Never commit actual values. Use `.env.example` files with placeholder values.
@@ -19,7 +19,7 @@
 ### Database
 | Variable | Required | Example | Description |
 |---|---|---|---|
-| `DATABASE_URL` | ✅ | `postgresql+asyncpg://user:pass@localhost:5432/paperbrain` | Async PostgreSQL URL |
+| `DATABASE_URL` | ✅ | `postgresql+asyncpg://user:pass@localhost:5432/shouko` | Async PostgreSQL URL |
 | `SUPABASE_URL` | ✅ | `https://abc.supabase.co` | Your Supabase project URL |
 | `SUPABASE_SERVICE_KEY` | ✅ | `eyJ...` | Service role key (has full DB access — keep secret!) |
 
@@ -42,8 +42,8 @@
 | `R2_ACCOUNT_ID` | ✅ | `abc123def456` | Cloudflare account ID |
 | `R2_ACCESS_KEY_ID` | ✅ | `...` | R2 API token access key |
 | `R2_SECRET_ACCESS_KEY` | ✅ | `...` | R2 API token secret |
-| `R2_BUCKET_NAME` | ✅ | `paperbrain-pdfs` | R2 bucket name |
-| `R2_PUBLIC_URL` | ✅ | `https://pdfs.paperbrain.app` | Public URL for R2 bucket |
+| `R2_BUCKET_NAME` | ✅ | `shouko-pdfs` | R2 bucket name |
+| `R2_PUBLIC_URL` | ✅ | `https://pdfs.shouko-ai.app` | Public URL for R2 bucket |
 
 ### Stripe (Payments)
 | Variable | Required | Example | Description |
@@ -58,8 +58,8 @@
 | Variable | Required | Example | Description |
 |---|---|---|---|
 | `RESEND_API_KEY` | ✅ | `re_...` | Resend API key for transactional email |
-| `FROM_EMAIL` | ✅ | `hello@paperbrain.app` | From address for outgoing emails |
-| `FROM_NAME` | ❌ | `PaperBrain` | From name (default: PaperBrain) |
+| `FROM_EMAIL` | ✅ | `hello@shouko-ai.app` | From address for outgoing emails |
+| `FROM_NAME` | ❌ | `Shouko-AI` | From name (default: Shouko-AI) |
 
 ### Monitoring
 | Variable | Required | Example | Description |
@@ -118,7 +118,7 @@ ENVIRONMENT=development
 APP_SECRET_KEY=change-me-32-chars-minimum-here
 ALLOWED_ORIGINS=http://localhost:3000
 
-DATABASE_URL=postgresql+asyncpg://postgres:localpass@localhost:5432/paperbrain
+DATABASE_URL=postgresql+asyncpg://postgres:localpass@localhost:5432/shouko
 SUPABASE_URL=https://yourproject.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key-here
 
@@ -130,7 +130,7 @@ OPENAI_API_KEY=sk-proj-your-key-here
 R2_ACCOUNT_ID=your-cloudflare-account-id
 R2_ACCESS_KEY_ID=your-r2-access-key
 R2_SECRET_ACCESS_KEY=your-r2-secret
-R2_BUCKET_NAME=paperbrain-pdfs
+R2_BUCKET_NAME=shouko-pdfs
 R2_PUBLIC_URL=https://pdfs.yourdomain.com
 
 STRIPE_SECRET_KEY=sk_test_your-test-key

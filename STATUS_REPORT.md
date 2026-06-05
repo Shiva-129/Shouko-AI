@@ -1,4 +1,4 @@
-# PaperBrain AI — Current Status Report
+# Shouko-AI — Current Status Report
 
 > Generated 2026-06-02 from a full walkthrough of the codebase.
 > Maps existing code to the original MVP roadmap and lists what is left.

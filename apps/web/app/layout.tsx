@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "PaperBrain — AI Academic Research Intelligence Platform",
+  title: "Shouko-AI — AI Academic Research Intelligence Platform",
   description:
     "Multi-agent AI research intelligence system. Transforms academic papers into interactive, queryable knowledge artifacts.",
 };

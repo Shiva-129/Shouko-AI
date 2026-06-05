@@ -1,7 +1,7 @@
 # Architecture Documentation
 
 ## 1. System Overview (C4 Context Level)
-This diagram provides a high-level view of the entire PaperBrain AI system. It shows the primary user interacting with the Next.js frontend, which connects to the FastAPI backend. The backend manages background tasks via Celery and APScheduler, stores data in PostgreSQL (with pgvector), caches in Redis, and communicates with various external APIs (OpenRouter, Groq, ArXiv, Stripe, Resend) to deliver AI research capabilities.
+This diagram provides a high-level view of the entire Shouko-AI system. It shows the primary user interacting with the Next.js frontend, which connects to the FastAPI backend. The backend manages background tasks via Celery and APScheduler, stores data in PostgreSQL (with pgvector), caches in Redis, and communicates with various external APIs (OpenRouter, Groq, ArXiv, Stripe, Resend) to deliver AI research capabilities.
 
 ```mermaid
 graph TB

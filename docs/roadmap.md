@@ -1,4 +1,4 @@
-# PaperBrain — Development Roadmap
+# Shouko-AI — Development Roadmap
 
 > 8-week MVP build plan for a solo founder. Strict scope — do not add features mid-sprint.
 
@@ -172,7 +172,7 @@
 **Goal:** 10 beta users using the product. Public launch ready.
 
 **Tasks:**
-- [ ] Landing page (paperbrain.app) with waitlist capture
+- [ ] Landing page (shouko-ai.app) with waitlist capture
 - [ ] Production environment fully configured
 - [ ] Production smoke test (full user journey)
 - [ ] Onboarding flow: 3-step wizard (interests → first digest → create artifact)

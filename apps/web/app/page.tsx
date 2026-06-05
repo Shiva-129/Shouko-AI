@@ -19,7 +19,7 @@ export default function LandingPage() {
             <Brain className="h-4.5 w-4.5 text-lime" />
           </div>
           <span className="font-syne font-extrabold text-lg tracking-tight">
-            PaperBrain <span className="text-lime">AI</span>
+            Shouko <span className="text-lime">AI</span>
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -48,7 +48,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="text-sm md:text-base text-slate-400 font-mono max-w-xl mb-10 leading-relaxed">
-          PaperBrain automatically discovers recent papers, ingests and chunks PDFs, extracts structured insights, and lets you chat with your entire library via context-aware RAG agents.
+          Shouko-AI automatically discovers recent papers, ingests and chunks PDFs, extracts structured insights, and lets you chat with your entire library via context-aware RAG agents.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-20">
@@ -101,7 +101,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-900/80 py-8 text-center text-[10px] font-mono text-slate-600 z-10">
-        © 2026 PaperBrain AI. Crafted for advanced academic exploration.
+        © 2026 Shouko-AI. Crafted for advanced academic exploration.
       </footer>
     </div>
   );

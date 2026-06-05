@@ -1,4 +1,4 @@
-# PaperBrain — Security & Compliance
+# Shouko-AI — Security & Compliance
 
 > Security rules, GDPR requirements, abuse prevention, and backup strategy.
 
@@ -327,7 +327,7 @@ ABUSE_THRESHOLDS = {
 4. User communication: status page update
 
 ### Status Page
-- Use Better Uptime's free status page (status.paperbrain.app)
+- Use Better Uptime's free status page (status.shouko-ai.app)
 - Monitors: API health endpoint, frontend, database connectivity
 - Auto-post incidents to status page
 

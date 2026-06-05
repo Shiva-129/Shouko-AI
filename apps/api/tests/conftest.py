@@ -36,7 +36,7 @@ async def setup_db(event_loop):
     async with test_sessionmaker() as session:
         default_user = User(
             id=uuid.UUID("00000000-0000-0000-0000-000000000000"),
-            email="mock@paperbrain.app",
+            email="mock@shouko-ai.app",
             name="Mock User",
             plan="free"
         )

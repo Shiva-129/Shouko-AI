@@ -3,7 +3,7 @@ from core.config import settings
 
 # Initialize Celery client
 celery_app = Celery(
-    "paperbrain_tasks",
+    "shouko_tasks",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL
 )

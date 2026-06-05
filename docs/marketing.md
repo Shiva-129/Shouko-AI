@@ -1,4 +1,4 @@
-# PaperBrain — Marketing & Go-To-Market Strategy
+# Shouko-AI — Marketing & Go-To-Market Strategy
 
 > Focused on AI/ML engineers and researchers. Distribution before product perfection.
 
@@ -31,14 +31,14 @@ Post weekly. Show real progress. This is your #1 acquisition channel.
 **Post types that work:**
 ```
 Type 1: Progress update
-"Week 2 of building PaperBrain. The ArXiv discovery agent now
+"Week 2 of building Shouko-AI. The ArXiv discovery agent now
 scans 200 papers/day and ranks them in under 10 seconds using
 Claude Haiku. Here's how the scoring works..."
 [attach screenshot of agent output]
 
 Type 2: Problem framing
 "I've read 300 papers in the last year. I remember maybe 15 of them.
-The problem isn't reading — it's retention. That's what I'm building PaperBrain to fix."
+The problem isn't reading — it's retention. That's what I'm building Shouko-AI to fix."
 
 Type 3: Technical insight
 "Chunking strategy matters a lot for RAG on research papers.
@@ -62,7 +62,7 @@ Here's what bad vs good output looks like, and what changed..."
 
 ### Waitlist Landing Page
 
-Build a simple landing page (paperbrain.app) by Week 3:
+Build a simple landing page (shouko-ai.app) by Week 3:
 - Hero: "Your AI reads papers. You keep the knowledge."
 - 30-second screen recording of artifact creation
 - Email capture form (use Resend + simple DB table)
@@ -72,7 +72,7 @@ Build a simple landing page (paperbrain.app) by Week 3:
 
 ### Reddit Seeding (passive)
 
-Don't spam. Answer questions where PaperBrain would help:
+Don't spam. Answer questions where Shouko-AI would help:
 - r/MachineLearning: "How do you keep up with papers?"
 - r/artificial: "Best tools for reading research papers?"
 - r/PhD: "How do you manage your paper reading workflow?"
@@ -152,7 +152,7 @@ Every week:
 
 **Example:**
 ```
-"Used PaperBrain to read 'FlashAttention-3' today. Key insight:
+"Used Shouko-AI to read 'FlashAttention-3' today. Key insight:
 The trick isn't just tiling — it's hiding memory latency behind
 async tensor core operations. Here's what the artifact surfaced..."
 
@@ -196,12 +196,12 @@ Target: AI researchers on X with "PhD" or "Research Scientist" in bio.
 Hi [name],
 
 I saw your thread on [specific paper/topic they posted about].
-I'm building PaperBrain — a system where AI agents automatically
+I'm building Shouko-AI — a system where AI agents automatically
 read and transform ArXiv papers into interactive knowledge artifacts
 you can actually query and build on.
 
 Would love to get your feedback. Free Pro account if you try it.
-[paperbrain.app]
+[shouko-ai.app]
 
 No obligations, genuinely want researcher input.
 ```
@@ -235,8 +235,8 @@ Approach: offer to write a guest piece about research workflow, include product 
 
 ### Public Artifact Sharing
 - Every artifact has a share button → generates public read-only link
-- Link shows artifact with "Create yours at paperbrain.app" CTA
-- Bottom of artifact: "Generated with PaperBrain"
+- Link shows artifact with "Create yours at shouko-ai.app" CTA
+- Bottom of artifact: "Generated with Shouko-AI"
 
 ### Referral Program (Phase 2)
 - Invite 3 friends → get 1 month Pro free
@@ -286,10 +286,10 @@ Approach: offer to write a guest piece about research workflow, include product 
 
 **Who:** Read papers but don't retain or build on them
 
-**PaperBrain is:** A multi-agent research intelligence system
+**Shouko-AI is:** A multi-agent research intelligence system
 
 **That:** Automatically discovers, ingests, and transforms papers into interactive knowledge artifacts you can query and build on
 
 **Unlike:** Elicit, Consensus, and Perplexity which give you one-time answers
 
-**PaperBrain:** Builds a compounding, personalized knowledge library that gets smarter every day you use it
+**Shouko-AI:** Builds a compounding, personalized knowledge library that gets smarter every day you use it

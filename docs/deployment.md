@@ -1,4 +1,4 @@
-# PaperBrain — Deployment Guide
+# Shouko-AI — Deployment Guide
 
 > MVP deploys on Vercel (frontend) + Railway (backend). Scale path: AWS ECS Fargate.
 
@@ -12,10 +12,10 @@
 # ── App ──────────────────────────────────────────────
 ENVIRONMENT=development        # development | staging | production
 APP_SECRET_KEY=                # 32-char random string (openssl rand -hex 32)
-ALLOWED_ORIGINS=http://localhost:3000,https://paperbrain.app
+ALLOWED_ORIGINS=http://localhost:3000,https://shouko-ai.app
 
 # ── Database ─────────────────────────────────────────
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/paperbrain
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/shouko
 SUPABASE_URL=https://yourproject.supabase.co
 SUPABASE_SERVICE_KEY=          # Service role key (NOT anon key)
 
@@ -32,8 +32,8 @@ OPENAI_API_KEY=sk-...          # For text-embedding-3-small only
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
-R2_BUCKET_NAME=paperbrain-pdfs
-R2_PUBLIC_URL=https://pdfs.paperbrain.app
+R2_BUCKET_NAME=shouko-pdfs
+R2_PUBLIC_URL=https://pdfs.shouko-ai.app
 
 # ── Payments ─────────────────────────────────────────
 STRIPE_SECRET_KEY=sk_live_...
@@ -43,7 +43,7 @@ STRIPE_TEAM_PRICE_ID=price_...
 
 # ── Email ────────────────────────────────────────────
 RESEND_API_KEY=re_...
-FROM_EMAIL=hello@paperbrain.app
+FROM_EMAIL=hello@shouko-ai.app
 
 # ── Monitoring ───────────────────────────────────────
 SENTRY_DSN=https://...@sentry.io/...
@@ -76,16 +76,16 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 
 ```bash
 # 1. Clone
-git clone https://github.com/yourname/paperbrain
-cd paperbrain
+git clone https://github.com/Shiva-129/shouko-ai
+cd shouko-ai
 
 # 2. Start infrastructure
 docker-compose up -d
 # Starts: postgres (port 5432), redis (port 6379)
 
 # 3. Create DB + enable pgvector
-psql postgresql://postgres:localpass@localhost:5432 -c "CREATE DATABASE paperbrain;"
-psql postgresql://postgres:localpass@localhost:5432/paperbrain -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql postgresql://postgres:localpass@localhost:5432 -c "CREATE DATABASE shouko;"
+psql postgresql://postgres:localpass@localhost:5432/shouko -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
 # 4. Backend setup
 cd apps/api
@@ -127,7 +127,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: localpass
-      POSTGRES_DB: paperbrain
+      POSTGRES_DB: shouko
     ports:
       - "5432:5432"
     volumes:
@@ -328,9 +328,9 @@ alembic history
 ## DNS & SSL
 
 ```
-paperbrain.app          → Vercel (frontend)
-api.paperbrain.app      → Railway/AWS (backend API)
-pdfs.paperbrain.app     → Cloudflare R2 (PDF storage)
+shouko-ai.app          → Vercel (frontend)
+api.shouko-ai.app      → Railway/AWS (backend API)
+pdfs.shouko-ai.app     → Cloudflare R2 (PDF storage)
 ```
 
 **Cloudflare setup:**
@@ -350,7 +350,7 @@ pdfs.paperbrain.app     → Cloudflare R2 (PDF storage)
 Before going live:
 
 - [ ] All env vars set in production (no .env files on server)
-- [ ] CORS restricted to `paperbrain.app` only
+- [ ] CORS restricted to `shouko-ai.app` only
 - [ ] Rate limiting enabled on all endpoints
 - [ ] Stripe webhook signature verification active
 - [ ] Sentry DSN configured
@@ -398,7 +398,7 @@ async def health():
 ```
 
 ### Uptime monitoring
-Configure Better Uptime to ping `https://api.paperbrain.app/health` every 60 seconds.
+Configure Better Uptime to ping `https://api.shouko-ai.app/health` every 60 seconds.
 Alert channel: Slack #alerts or SMS.
 
 ### Cost monitoring

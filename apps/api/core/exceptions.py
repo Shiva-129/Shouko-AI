@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class PaperBrainException(Exception):
+class ShoukoAIException(Exception):
     def __init__(self, code: str, message: str, status_code: int = 400, details: dict = None):
         self.code = code
         self.message = message
@@ -13,23 +13,23 @@ class PaperBrainException(Exception):
         self.details = details or {}
         super().__init__(self.message)
 
-class NotFoundException(PaperBrainException):
+class NotFoundException(ShoukoAIException):
     def __init__(self, message: str = "Resource not found", code: str = "NOT_FOUND", details: dict = None):
         super().__init__(code=code, message=message, status_code=404, details=details)
 
-class BadRequestException(PaperBrainException):
+class BadRequestException(ShoukoAIException):
     def __init__(self, message: str = "Bad request", code: str = "BAD_REQUEST", details: dict = None):
         super().__init__(code=code, message=message, status_code=400, details=details)
 
-class UnauthorizedException(PaperBrainException):
+class UnauthorizedException(ShoukoAIException):
     def __init__(self, message: str = "Unauthorized", code: str = "UNAUTHORIZED", details: dict = None):
         super().__init__(code=code, message=message, status_code=401, details=details)
 
-class ForbiddenException(PaperBrainException):
+class ForbiddenException(ShoukoAIException):
     def __init__(self, message: str = "Forbidden", code: str = "FORBIDDEN", details: dict = None):
         super().__init__(code=code, message=message, status_code=403, details=details)
 
-async def paperbrain_exception_handler(request: Request, exc: PaperBrainException):
+async def shouko_exception_handler(request: Request, exc: ShoukoAIException):
     return JSONResponse(
         status_code=exc.status_code,
         content={

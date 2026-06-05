@@ -42,7 +42,7 @@ class EmailService:
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>PaperBrain AI Daily Digest</title>
+            <title>Shouko-AI Daily Digest</title>
         </head>
         <body style="margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
             <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);">
@@ -50,7 +50,7 @@ class EmailService:
                 <tr>
                     <td style="padding: 30px; text-align: center; background-color: #0f172a; border-bottom: 1px solid #1e293b;">
                         <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-                            PaperBrain <span style="color: #3b82f6;">Digest</span>
+                            Shouko <span style="color: #3b82f6;">Digest</span>
                         </h1>
                         <p style="margin: 6px 0 0 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
                             DAILY RESEARCH INTELLIGENCE
@@ -71,8 +71,8 @@ class EmailService:
                 <!-- Footer -->
                 <tr>
                     <td style="padding: 24px; text-align: center; background-color: #0f172a; font-size: 11px; color: #475569;">
-                        <p style="margin: 0 0 4px 0;">Sent automatically by your PaperBrain Discovery Agent.</p>
-                        <p style="margin: 0;">© 2026 PaperBrain AI. All rights reserved.</p>
+                        <p style="margin: 0 0 4px 0;">Sent automatically by your Shouko-AI Discovery Agent.</p>
+                        <p style="margin: 0;">© 2026 Shouko-AI. All rights reserved.</p>
                     </td>
                 </tr>
             </table>
@@ -99,9 +99,9 @@ class EmailService:
                             "Content-Type": "application/json"
                         },
                         json={
-                            "from": "PaperBrain <digests@paperbrain.ai>",
+                            "from": "Shouko-AI <digests@shouko-ai.app>",
                             "to": to_email,
-                            "subject": "Your Daily PaperBrain AI Academic Digest 🧠",
+                            "subject": "Your Daily Shouko-AI Academic Digest 🤖",
                             "html": html_content
                         },
                         timeout=10.0
@@ -136,7 +136,7 @@ class EmailService:
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Welcome to PaperBrain AI</title>
+            <title>Welcome to Shouko-AI</title>
         </head>
         <body style="margin: 0; padding: 0; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
             <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);">
@@ -144,7 +144,7 @@ class EmailService:
                 <tr>
                     <td style="padding: 30px; text-align: center; background-color: #0f172a; border-bottom: 1px solid #1e293b;">
                         <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-                            Welcome to <span style="color: #a3e635;">PaperBrain AI</span> 🧠
+                            Welcome to <span style="color: #a3e635;">Shouko-AI</span> 🤖
                         </h1>
                         <p style="margin: 6px 0 0 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
                             YOUR AGENTIC RESEARCH WORKSPACE
@@ -158,7 +158,7 @@ class EmailService:
                             Hello {user_name},
                         </p>
                         <p style="margin: 0 0 20px 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
-                            We're thrilled to have you join PaperBrain AI! Our mission is to accelerate scientific discovery by giving researchers and developers a unified agentic workspace to read, digest, and query academic publications.
+                            We're thrilled to have you join Shouko-AI! Our mission is to accelerate scientific discovery by giving researchers and developers a unified agentic workspace to read, digest, and query academic publications.
                         </p>
                         <p style="margin: 0 0 16px 0; font-size: 14px; color: #ffffff; font-weight: 600;">
                             Here's what you can do next:
@@ -184,7 +184,7 @@ class EmailService:
                             </tr>
                         </table>
                         <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
-                            <a href="https://paperbrain.ai/dashboard" style="display: inline-block; font-size: 13px; font-weight: 700; color: #0d0d0d; text-decoration: none; padding: 12px 24px; border-radius: 8px; background-color: #a3e635;">
+                            <a href="https://shouko-ai.app/dashboard" style="display: inline-block; font-size: 13px; font-weight: 700; color: #0d0d0d; text-decoration: none; padding: 12px 24px; border-radius: 8px; background-color: #a3e635;">
                                 Go to Workspace
                             </a>
                         </div>
@@ -193,8 +193,8 @@ class EmailService:
                 <!-- Footer -->
                 <tr>
                     <td style="padding: 24px; text-align: center; background-color: #0f172a; font-size: 11px; color: #475569;">
-                        <p style="margin: 0 0 4px 0;">You received this welcome email because you signed up for PaperBrain AI.</p>
-                        <p style="margin: 0;">© 2026 PaperBrain AI. All rights reserved.</p>
+                        <p style="margin: 0 0 4px 0;">You received this welcome email because you signed up for Shouko-AI.</p>
+                        <p style="margin: 0;">© 2026 Shouko-AI. All rights reserved.</p>
                     </td>
                 </tr>
             </table>
@@ -220,9 +220,9 @@ class EmailService:
                             "Content-Type": "application/json"
                         },
                         json={
-                            "from": "PaperBrain <welcome@paperbrain.ai>",
+                            "from": "Shouko-AI <welcome@shouko-ai.app>",
                             "to": to_email,
-                            "subject": "Welcome to PaperBrain AI! 🧠🚀",
+                            "subject": "Welcome to Shouko-AI! 🤖",
                             "html": html_content
                         },
                         timeout=10.0

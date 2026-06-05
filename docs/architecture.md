@@ -1,4 +1,4 @@
-# PaperBrain — System Architecture
+# Shouko-AI — System Architecture
 
 > High-level system design, data flow, and infrastructure decisions.
 

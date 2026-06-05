@@ -1,4 +1,4 @@
-# PaperBrain — AI Architecture
+# Shouko-AI — AI Architecture
 
 > All prompts, agent designs, RAG setup, cost optimization, and evaluation strategy.
 

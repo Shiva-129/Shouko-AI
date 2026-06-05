@@ -3,25 +3,25 @@ version: '3.8'
 services:
   db:
     image: ankane/pgvector:latest
-    container_name: paperbrain-db
+    container_name: shouko-db
     restart: always
     environment:
-      POSTGRES_USER: paperbrain
+      POSTGRES_USER: shouko
       POSTGRES_PASSWORD: supersecretpassword
-      POSTGRES_DB: paperbrain
+      POSTGRES_DB: shouko
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U paperbrain -d paperbrain"]
+      test: ["CMD-SHELL", "pg_isready -U shouko -d shouko"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: paperbrain-redis
+    container_name: shouko-redis
     restart: always
     ports:
       - "6379:6379"

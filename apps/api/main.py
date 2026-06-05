@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from core.config import settings
 from core.exceptions import (
-    PaperBrainException,
-    paperbrain_exception_handler,
+    ShoukoAIException,
+    shouko_exception_handler,
     validation_exception_handler,
     generic_exception_handler,
 )
@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="PaperBrain API",
+    title="Shouko-AI API",
     description="Multi-agent AI research intelligence system backend API",
     version="1.0.0",
     docs_url="/docs",
@@ -49,7 +49,7 @@ app.add_middleware(
 )
 
 # Register Exception Handlers
-app.add_exception_handler(PaperBrainException, paperbrain_exception_handler)
+app.add_exception_handler(ShoukoAIException, shouko_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 

@@ -1,4 +1,4 @@
-# PaperBrain — Database Schema
+# Shouko-AI — Database Schema
 
 > PostgreSQL via Supabase with pgvector extension. All tables have Row-Level Security (RLS) enabled.
 
