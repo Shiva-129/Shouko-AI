@@ -83,3 +83,13 @@ export interface ArtifactListItem {
   status: string;
   created_at: string;
 }
+
+export interface Annotation {
+  id: string;
+  artifact_id: string;
+  user_id: string;
+  type: "note" | "highlight" | "experiment" | "task" | "link";
+  content: string;
+  meta_data: Record<string, any>;
+  created_at: string;
+}

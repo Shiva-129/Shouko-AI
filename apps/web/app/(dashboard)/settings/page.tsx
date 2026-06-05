@@ -47,7 +47,7 @@ export default function SettingsPage() {
 
   if (isUserLoading) {
     return (
-      <div className="p-8 max-w-5xl flex flex-col justify-center items-center h-96">
+      <div className="flex-1 bg-workspace flex flex-col justify-center items-center min-w-0 p-8 h-96 select-none">
         <Loader2 className="h-8 w-8 text-lime animate-spin mb-2" />
         <p className="text-secondaryText text-sm font-mono">Loading settings...</p>
       </div>
@@ -58,7 +58,7 @@ export default function SettingsPage() {
   const isPro = user?.plan === "pro";
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="flex-1 bg-workspace flex flex-col min-w-0 p-8 select-none">
       <h1 className="font-syne font-extrabold text-[32px] text-primaryText tracking-tight mb-6">
         Settings
       </h1>

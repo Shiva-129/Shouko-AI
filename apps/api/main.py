@@ -10,6 +10,16 @@ from core.exceptions import (
     generic_exception_handler,
 )
 from core.scheduler import start_scheduler, stop_scheduler
+import os
+import sentry_sdk
+
+if os.getenv("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        environment=settings.ENVIRONMENT,
+        traces_sample_rate=1.0,
+    )
+
 
 
 @asynccontextmanager
@@ -44,7 +54,7 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # Include Routers
-from routers import papers, chat, users, digests, artifacts, billing, collections
+from routers import papers, chat, users, digests, artifacts, billing, collections, annotations
 app.include_router(papers.router)
 app.include_router(chat.router)
 app.include_router(users.router)
@@ -52,6 +62,7 @@ app.include_router(digests.router)
 app.include_router(artifacts.router)
 app.include_router(billing.router)
 app.include_router(collections.router)
+app.include_router(annotations.router)
 
 
 @app.get("/health", tags=["System"])

@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/artifact/StatusBadge";
 import { InsightsList } from "@/components/artifact/InsightsList";
 import { AutoQA } from "@/components/artifact/AutoQA";
 import { SuggestedExperiments } from "@/components/artifact/SuggestedExperiments";
+import { AnnotationsTab } from "@/components/artifact/AnnotationsTab";
 import { useArtifact } from "@/lib/hooks/useArtifact";
 import { useSSEChat } from "@/lib/hooks/useSSEChat";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -151,6 +152,7 @@ export default function ArtifactPage() {
                 <TabsTrigger value="insights">Insights</TabsTrigger>
                 <TabsTrigger value="qa">Q&A</TabsTrigger>
                 <TabsTrigger value="experiments">Experiments</TabsTrigger>
+                <TabsTrigger value="annotations">Notes & Highlights</TabsTrigger>
               </TabsList>
 
               <TabsContent value="summary">
@@ -175,6 +177,10 @@ export default function ArtifactPage() {
 
               <TabsContent value="experiments">
                 <SuggestedExperiments experiments={artifact.suggested_experiments || []} />
+              </TabsContent>
+
+              <TabsContent value="annotations">
+                <AnnotationsTab artifactId={id} />
               </TabsContent>
             </Tabs>
           </div>

@@ -116,7 +116,7 @@ export default function CollectionsPage() {
   if (selectedId && collectionDetail) {
     const detail = collectionDetail;
     return (
-      <div className="p-8 max-w-5xl">
+      <div className="flex-1 bg-workspace flex flex-col min-w-0 p-8 select-none">
         <button
           onClick={() => setSelectedId(null)}
           className="flex items-center gap-1.5 text-xs text-secondaryText hover:text-primaryText mb-4 transition-colors font-mono"
@@ -214,7 +214,7 @@ export default function CollectionsPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="flex-1 bg-workspace flex flex-col min-w-0 p-8 select-none">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="font-syne font-extrabold text-[32px] text-primaryText tracking-tight">

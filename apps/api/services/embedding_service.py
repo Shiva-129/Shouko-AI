@@ -2,8 +2,8 @@ import hashlib
 from openai import AsyncOpenAI
 from core.config import settings
 
-EMBEDDING_DIM = 384
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_DIM = 2048
+EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2"
 
 class EmbeddingService:
     def __init__(self):

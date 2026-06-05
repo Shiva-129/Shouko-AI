@@ -103,7 +103,7 @@ export default function InterestsPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="flex-1 bg-workspace flex flex-col min-w-0 p-8 select-none">
       <h1 className="font-syne font-extrabold text-[32px] text-primaryText tracking-tight mb-1">
         Interest Profile
       </h1>

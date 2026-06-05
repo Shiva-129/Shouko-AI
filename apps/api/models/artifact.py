@@ -59,8 +59,8 @@ class Artifact(Base):
         server_default="'{}'::uuid[]"
     )
     
-    # Vector column representing 384-dimensional embeddings (all-MiniLM-L6-v2)
-    embedding = mapped_column(Vector(384), nullable=True)
+    # Vector column representing 2048-dimensional embeddings (nvidia/llama-nemotron-embed-vl-1b-v2)
+    embedding = mapped_column(Vector(2048), nullable=True)
     
     status: Mapped[str] = mapped_column(
         String, 

@@ -45,9 +45,11 @@ async def ingest_paper_endpoint(
             raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=msg)
 
         # Check if paper with this PDF URL or ArXiv ID already exists
-        query = select(Paper).where(Paper.pdf_url == payload.pdf_url)
+        from sqlalchemy import or_
         if payload.arxiv_id:
-            query = query.or_(Paper.arxiv_id == payload.arxiv_id)
+            query = select(Paper).where(or_(Paper.pdf_url == payload.pdf_url, Paper.arxiv_id == payload.arxiv_id))
+        else:
+            query = select(Paper).where(Paper.pdf_url == payload.pdf_url)
             
         result = await db.execute(query)
         paper = result.scalar_one_or_none()

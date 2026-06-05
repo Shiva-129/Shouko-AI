@@ -72,7 +72,7 @@ export default function LibraryPage() {
   const artifacts = response?.artifacts || [];
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="flex-1 bg-workspace flex flex-col min-w-0 p-8 select-none">
       <h1 className="font-syne font-extrabold text-[32px] text-primaryText tracking-tight mb-6">
         My Library
       </h1>

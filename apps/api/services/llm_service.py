@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 from core.config import settings
 
 OPENROUTER_MODEL_MAP = {
-    "gemini-1.5-flash": "google/gemini-2.5-flash-preview-04-17",
+    "gemini-1.5-flash": "moonshotai/kimi-k2.6",
     "claude-sonnet": "anthropic/claude-3.5-sonnet",
     "claude-haiku": "anthropic/claude-3-haiku",
 }
@@ -23,7 +23,7 @@ class LLMService:
                 base_url="https://openrouter.ai/api/v1",
                 api_key=openrouter_key,
             )
-            self.model = "openrouter/auto"
+            self.model = "moonshotai/kimi-k2.6"
             print("[LLMService] Initialized OpenRouter API Provider.")
             return
 

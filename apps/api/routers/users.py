@@ -6,6 +6,10 @@ from core.dependencies import get_db
 from core.security import get_current_user
 from core.usage import get_monthly_count, get_daily_count, MONTHLY_LIMITS, DAILY_LIMITS
 from models.user import User
+import datetime
+from services.email_service import EmailService
+
+email_service = EmailService()
 
 router = APIRouter(
     prefix="/users",
@@ -51,6 +55,15 @@ async def get_current_user_profile(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    if user.onboarded_at is None:
+        if isinstance(user, User):
+            user.onboarded_at = datetime.datetime.utcnow()
+            await db.commit()
+            await db.refresh(user)
+        else:
+            user.onboarded_at = datetime.datetime.utcnow()
+        await email_service.send_welcome_email(user.email, user.name or "Researcher")
+
     plan = user.plan or "free"
     usage = {
         "artifact_created_monthly": await get_monthly_count(db, user.id, "artifact_created"),
@@ -68,8 +81,8 @@ async def get_current_user_profile(
         avatar_url=user.avatar_url,
         plan=user.plan,
         interest_profile=user.interest_profile or {},
-        onboarded_at=user.onboarded_at.isoformat() if user.onboarded_at else None,
-        created_at=user.created_at.isoformat() if user.created_at else None,
+        onboarded_at=user.onboarded_at.isoformat() if hasattr(user.onboarded_at, "isoformat") else user.onboarded_at,
+        created_at=user.created_at.isoformat() if hasattr(user.created_at, "isoformat") else user.created_at,
         usage=usage,
     )
 
@@ -87,8 +100,9 @@ async def update_current_user_profile(
         current_profile.update(payload.interest_profile.model_dump())
         user.interest_profile = current_profile
 
-    await db.commit()
-    await db.refresh(user)
+    if isinstance(user, User):
+        await db.commit()
+        await db.refresh(user)
 
     plan = user.plan or "free"
     usage = {
@@ -107,7 +121,7 @@ async def update_current_user_profile(
         avatar_url=user.avatar_url,
         plan=user.plan,
         interest_profile=user.interest_profile or {},
-        onboarded_at=user.onboarded_at.isoformat() if user.onboarded_at else None,
-        created_at=user.created_at.isoformat() if user.created_at else None,
+        onboarded_at=user.onboarded_at.isoformat() if hasattr(user.onboarded_at, "isoformat") else user.onboarded_at,
+        created_at=user.created_at.isoformat() if hasattr(user.created_at, "isoformat") else user.created_at,
         usage=usage,
     )

@@ -41,7 +41,7 @@ export default function DigestDatePage() {
       <header className="flex flex-col shrink-0 mb-6">
         <div className="flex items-center justify-between">
           <h1 className="font-syne font-extrabold text-[32px] text-primaryText tracking-tight">
-            Today's Digest
+            {isToday ? "Today's Digest" : "Daily Digest"}
           </h1>
           <div className="flex items-center gap-1">
             <Button
