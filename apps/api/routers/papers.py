@@ -17,8 +17,8 @@ router = APIRouter(
 )
 
 class PaperIngestRequest(BaseModel):
-    title: str = Field(..., description="The title of the academic paper")
-    pdf_url: str = Field(..., description="Direct HTTPS link to the paper's PDF file")
+    title: str | None = Field(None, description="The title of the academic paper")
+    pdf_url: str | None = Field(None, description="Direct HTTPS link to the paper's PDF file")
     arxiv_id: str | None = Field(None, description="Optional ArXiv identifier")
 
 class PaperIngestResponse(BaseModel):
@@ -44,12 +44,37 @@ async def ingest_paper_endpoint(
         if not allowed:
             raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=msg)
 
+        arxiv_id = payload.arxiv_id
+        title = payload.title
+        pdf_url = payload.pdf_url
+
+        if arxiv_id and (not title or not pdf_url):
+            import arxiv
+            client = arxiv.Client()
+            search = arxiv.Search(id_list=[arxiv_id])
+            try:
+                results = list(client.results(search))
+                if not results:
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ArXiv paper {arxiv_id} not found")
+                result = results[0]
+                if not title:
+                    title = result.title
+                if not pdf_url:
+                    pdf_url = result.pdf_url
+            except Exception as e:
+                if isinstance(e, HTTPException):
+                    raise
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to fetch metadata from ArXiv: {str(e)}")
+
+        if not title or not pdf_url:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title and PDF URL are required (or a valid ArXiv ID)")
+
         # Check if paper with this PDF URL or ArXiv ID already exists
         from sqlalchemy import or_
-        if payload.arxiv_id:
-            query = select(Paper).where(or_(Paper.pdf_url == payload.pdf_url, Paper.arxiv_id == payload.arxiv_id))
+        if arxiv_id:
+            query = select(Paper).where(or_(Paper.pdf_url == pdf_url, Paper.arxiv_id == arxiv_id))
         else:
-            query = select(Paper).where(Paper.pdf_url == payload.pdf_url)
+            query = select(Paper).where(Paper.pdf_url == pdf_url)
             
         result = await db.execute(query)
         paper = result.scalar_one_or_none()
@@ -57,17 +82,17 @@ async def ingest_paper_endpoint(
         if not paper:
             # Create a new Paper record
             paper = Paper(
-                title=payload.title,
-                pdf_url=payload.pdf_url,
-                arxiv_id=payload.arxiv_id,
-                source="arxiv" if payload.arxiv_id else "manual"
+                title=title,
+                pdf_url=pdf_url,
+                arxiv_id=arxiv_id,
+                source="arxiv" if arxiv_id else "manual"
             )
             db.add(paper)
             await db.flush()  # Populates paper.id without committing yet
             
         # Execute Ingestion flow
         ingestion_service = IngestionService()
-        ingest_result = await ingestion_service.ingest_paper(db, paper.id, payload.pdf_url)
+        ingest_result = await ingestion_service.ingest_paper(db, paper.id, pdf_url)
         
         await log_usage_event(db, user.id, "paper_ingested", {"paper_id": str(paper.id)})
         await db.commit()
