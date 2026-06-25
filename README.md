@@ -2,8 +2,6 @@
 
 A premium, state-of-the-art agentic platform designed to streamline academic research. Shouko-AI automatically discovers daily research papers, builds deep-dive interactive artifacts, and enables real-time, high-performance RAG chat.
 
-![Shouko-AI Product Showcase](Images/shouko_branding/product_showcase.png)
-
 ---
 
 ## 🚀 Key Features
