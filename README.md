@@ -66,7 +66,7 @@ Shouko-AI turns dense, text-heavy academic literature into a highly intuitive, i
 
 Researchers can drag nodes, expand connections, and traverse the relationship graph between different papers—making literature reviews a spatial and interactive experience rather than a linear list of search results.
 
-![Interactive Mindmap Canvas Demo](paperbrain_canvas_drag_1780314979748.webp)
+![Interactive Mindmap Canvas Demo](Images/shouko_branding/paperbrain_canvas_drag_1780314979748.webp)
 
 ---
 

@@ -113,7 +113,7 @@ sandbox_emails/
 docker-data/
 
 # --- Temporary/Draft Assets ---
-paperbrain_canvas_drag_*.webp
+/paperbrain_canvas_drag_*.webp
 *.pdf
 
 # --- Carousel Assets (Do Not Push to GitHub) ---
