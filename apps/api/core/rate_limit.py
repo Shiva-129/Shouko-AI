@@ -4,7 +4,6 @@ import logging
 from fastapi import Request, HTTPException, status, Depends
 from core.redis import redis_client
 from core.security import get_current_user
-from core.dependencies import MockUser
 from models.user import User
 
 logger = logging.getLogger(__name__)
@@ -33,8 +32,8 @@ class RateLimiter:
             current_hits = res[2]
             return current_hits > self.limit
         except Exception as e:
-            logger.warning(f"Redis rate limiter exception (falling back to allowed): {e}")
-            return False
+            logger.warning(f"Redis rate limiter exception (denying request as safe fallback): {e}")
+            return True
 
 
 def RateLimit(limit: int, window: int, name: str = "default"):
@@ -42,7 +41,7 @@ def RateLimit(limit: int, window: int, name: str = "default"):
     
     async def dependency(
         request: Request,
-        current_user: User | MockUser = Depends(get_current_user)
+        current_user: User = Depends(get_current_user)
     ):
         identifier = str(current_user.id) if current_user else (request.client.host if request.client else "unknown")
         

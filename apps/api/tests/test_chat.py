@@ -8,8 +8,7 @@ from models.artifact import Artifact
 from models.conversation import Conversation
 
 @pytest.mark.asyncio
-async def test_chat_sse_stream(client):
-    headers = {"Authorization": "Bearer mock-token"}
+async def test_chat_sse_stream(client, auth_headers):
     
     paper_id = uuid.uuid4()
     artifact_id = uuid.uuid4()
@@ -59,7 +58,7 @@ async def test_chat_sse_stream(client):
             response = await client.post(
                 f"/conversations/{artifact_id}/chat",
                 json=payload,
-                headers=headers
+                headers=auth_headers
             )
             
             assert response.status_code == 200

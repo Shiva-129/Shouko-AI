@@ -21,7 +21,7 @@
 |---|---|---|---|
 | `DATABASE_URL` | ✅ | `postgresql+asyncpg://user:pass@localhost:5432/shouko` | Async PostgreSQL URL |
 | `SUPABASE_URL` | ✅ | `https://abc.supabase.co` | Your Supabase project URL |
-| `SUPABASE_SERVICE_KEY` | ✅ | `eyJ...` | Service role key (has full DB access — keep secret!) |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | `eyJ...` | Service role key (has full DB access — keep secret!) |
 
 ### Redis / Cache
 | Variable | Required | Example | Description |
@@ -120,7 +120,7 @@ ALLOWED_ORIGINS=http://localhost:3000
 
 DATABASE_URL=postgresql+asyncpg://postgres:localpass@localhost:5432/shouko
 SUPABASE_URL=https://yourproject.supabase.co
-SUPABASE_SERVICE_KEY=your-service-role-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
 REDIS_URL=redis://localhost:6379
 
@@ -152,7 +152,7 @@ LOGFIRE_TOKEN=
 ## Security Notes
 
 1. **Never** put `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in frontend env vars
-2. **Never** put `SUPABASE_SERVICE_KEY` in frontend — only `SUPABASE_ANON_KEY`
+2. **Never** put `SUPABASE_SERVICE_ROLE_KEY` in frontend — only `SUPABASE_ANON_KEY`
 3. **Never** put `STRIPE_SECRET_KEY` in frontend — only `STRIPE_PUBLISHABLE_KEY`
 4. Use `sk_test_` Stripe keys in development, `sk_live_` only in production
 5. Rotate `APP_SECRET_KEY` if ever exposed — invalidates all existing sessions

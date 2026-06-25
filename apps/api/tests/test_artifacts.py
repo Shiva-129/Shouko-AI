@@ -7,8 +7,7 @@ from models.paper import Paper
 from models.artifact import Artifact
 
 @pytest.mark.asyncio
-async def test_create_and_delete_artifact(client):
-    headers = {"Authorization": "Bearer mock-token"}
+async def test_create_and_delete_artifact(client, auth_headers):
     
     paper_id = uuid.uuid4()
     paper = Paper(
@@ -28,7 +27,7 @@ async def test_create_and_delete_artifact(client):
     try:
         with patch("routers.artifacts.generate_artifact.delay") as mock_delay, \
              patch("routers.artifacts.check_usage_limit", return_value=(True, None)):
-            response = await client.post("/artifacts", json=payload, headers=headers)
+            response = await client.post("/artifacts", json=payload, headers=auth_headers)
             assert response.status_code == 201
             data = response.json()
             assert data["paper_id"] == str(paper_id)
@@ -36,11 +35,11 @@ async def test_create_and_delete_artifact(client):
             mock_delay.assert_called_once()
             artifact_id = data["id"]
 
-            status_resp = await client.get(f"/artifacts/{artifact_id}/status", headers=headers)
+            status_resp = await client.get(f"/artifacts/{artifact_id}/status", headers=auth_headers)
             assert status_resp.status_code == 200
             assert status_resp.json()["status"] == "queued"
 
-            del_resp = await client.delete(f"/artifacts/{artifact_id}", headers=headers)
+            del_resp = await client.delete(f"/artifacts/{artifact_id}", headers=auth_headers)
             assert del_resp.status_code == 204
     finally:
         async with test_sessionmaker() as session:

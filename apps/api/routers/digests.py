@@ -2,7 +2,7 @@ import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from core.database import get_db
+from core.dependencies import get_db
 from core.security import get_current_user
 from models.user import User
 from models.paper import Paper

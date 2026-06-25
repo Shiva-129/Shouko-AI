@@ -26,3 +26,4 @@ pytest-asyncio>=0.23.0
 pytest-cov>=4.1.0
 sentry-sdk>=1.40.0
 
+fakeredis[lua]>=2.26.0

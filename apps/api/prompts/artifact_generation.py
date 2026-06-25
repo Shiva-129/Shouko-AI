@@ -45,24 +45,23 @@ SYSTEM_PROMPT = (
 
 
 def build_artifact_prompt(paper_title: str, paper_abstract: str | None, chunks: list[dict]) -> str:
+    safe_title = paper_title.strip()[:500]
+    safe_abstract = (paper_abstract or "").strip()[:2000]
     sections: dict[str, list[str]] = {}
     for c in chunks:
         section = c.get("section", "body") or "body"
         if section not in sections:
             sections[section] = []
-        sections[section].append(c["content"])
-
-    context_parts = [f"# Paper: {paper_title}"]
-    if paper_abstract:
-        context_parts.append(f"\n## Abstract\n{paper_abstract}")
-
+        content = c.get("content", "").strip()[:5000]
+        sections[section].append(content)
+    context_parts = [f"# Paper: {safe_title}"]
+    if safe_abstract:
+        context_parts.append(f"\n## Abstract\n{safe_abstract}")
     for section_name in ["abstract", "introduction", "methods", "body", "references"]:
         if section_name in sections:
             block = "\n\n".join(sections[section_name][:3])
             context_parts.append(f"\n## {section_name.capitalize()}\n{block}")
-
     context = "\n\n---\n\n".join(context_parts)
-
     return (
         f"{context}\n\n"
         "Generate a structured artifact with:\n"

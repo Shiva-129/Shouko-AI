@@ -1,0 +1,393 @@
+================================================================================
+  DEVOPS INFRASTRUCTURE REQUIREMENTS — Shouko-AI Production Launch
+  Goal: Private beta for 100 users within 7 days
+================================================================================
+
+---
+
+1. REQUIRED ACCOUNTS
+=====================
+
+You must create accounts at the following services. I list each with why,
+what plan you need, and the monthly cost.
+
+1. Supabase (supabase.com)
+   Why: Auth (JWT tokens, user management), realtime, database hosting
+   Plan: Free tier (up to 50,000 monthly active users, 500 MB database)
+   Cost: $0/month (free tier sufficient for beta)
+   Note: You can also self-host Postgres + use a separate auth provider,
+         but Supabase is the integrated auth solution the app is built for.
+
+2. OpenRouter (openrouter.ai)
+   Why: LLM API gateway — provides the embedding model (nvidia/llama-nemotron)
+         and fallback for other LLMs. This is the PRIMARY AI provider.
+   Plan: Pay-as-you-go. No monthly fee, usage-based billing.
+   Cost: ~$5-20/month for 100 users (embeddings are cheap, ~$0.01/1M tokens)
+
+3. Cloudflare (cloudflare.com)
+   Why: R2 object storage for PDF files. The app stores uploaded PDFs in R2.
+   Plan: Free tier (10 GB storage, 10 million reads/month, 1 million writes/month)
+   Cost: $0/month (free tier sufficient for beta)
+   Note: You only need R2 (S3-compatible object storage), not the full Cloudflare
+         CDN/spectrum unless you also want to proxy through Cloudflare.
+
+4. Resend (resend.com)
+   Why: Transactional email — sends welcome emails and daily digest emails to users.
+   Plan: Free tier (100 emails/day, 3,000 emails/month)
+   Cost: $0/month (free tier sufficient for 100 users)
+   Note: The app uses Resend SDK. The from-email defaults to onboarding@resend.dev
+         on the free tier, or you can use a custom domain on the paid plan ($10/mo).
+
+5. Stripe (stripe.com)
+   Why: Payment processing — handles pro plan subscriptions, checkout sessions,
+         billing portal, and webhook events.
+   Plan: Pay-as-you-go. 2.9% + $0.30 per transaction.
+   Cost: $0/month (no monthly fee, only transaction fees)
+   Note: Stripe is OPTIONAL for beta launch. The app works without it — users
+         stay on the free plan. Only set up Stripe when you're ready to charge.
+
+6. Sentry (sentry.io)
+   Why: Error tracking and performance monitoring.
+   Plan: Free tier (5,000 events/month, 1 user)
+   Cost: $0/month (free tier sufficient for beta)
+   Note: OPTIONAL for launch. The app works without Sentry (graceful skip).
+
+7. GitHub (github.com) — you already have this
+   Why: Source control and CI/CD (GitHub Actions)
+   Plan: Free tier (2,000 CI minutes/month)
+   Cost: $0/month
+
+8. Docker Hub (hub.docker.com) — only if publishing images
+   Why: Container registry for production deployments
+   Plan: Free tier (1 private repository, unlimited public)
+   Cost: $0/month
+   Note: You can build and deploy directly from source without Docker Hub.
+
+---
+
+2. REQUIRED API KEYS
+=====================
+
+SERVICE                    ENV VARS                                                      REQUIRED
+───────────────────────────────────────────────────────────────────────────────────────────────────
+SUPABASE                   SUPABASE_URL                                                    YES
+                           SUPABASE_ANON_KEY                                               YES
+                           SUPABASE_SERVICE_ROLE_KEY                                       YES
+  How to obtain: Go to supabase.com → Create a project → Settings → API →
+  Copy "Project URL" (SUPABASE_URL), "anon public" (SUPABASE_ANON_KEY),
+  "service_role secret" (SUPABASE_SERVICE_ROLE_KEY)
+
+OPENROUTER                 OPENROUTER_API_KEY                                              YES
+  How to obtain: Go to openrouter.ai → Sign up → Create API key at
+  https://openrouter.ai/keys
+
+CLOUDFLARE R2              R2_ACCOUNT_ID                                                    NO*
+                           R2_ACCESS_KEY_ID                                                NO*
+                           R2_SECRET_ACCESS_KEY                                            NO*
+                           R2_BUCKET_NAME                                                  NO*
+                           R2_PUBLIC_URL                                                   NO*
+  How to obtain: Go to cloudflare.com → R2 → Create bucket → Generate API token
+  * NOT required for development — falls back to local filesystem
+  * REQUIRED for production — without it, PDFs are stored on local disk
+
+STRIPE                     STRIPE_SECRET_KEY                                               NO*
+                           STRIPE_WEBHOOK_SECRET                                           NO*
+                           STRIPE_PRO_PRICE_ID                                             NO*
+  How to obtain: Go to stripe.com → Dashboard → Developers → API keys
+  * NOT required for beta — users stay on free plan. Set up when ready to charge.
+
+RESEND                     RESEND_API_KEY                                                  NO*
+                           RESEND_FROM_EMAIL                                               NO*
+  How to obtain: Go to resend.com → API Keys → Create API key
+  * NOT required for development — emails are written to local sandbox files
+  * RECOMMENDED for beta so users receive welcome emails
+
+SENTRY                     SENTRY_DSN                                                      NO
+  How to obtain: Go to sentry.io → Create project → Copy DSN
+  * NOT required — app works without it
+
+POSTHOG                    NEXT_PUBLIC_POSTHOG_KEY                                         NO
+                           NEXT_PUBLIC_POSTHOG_HOST                                        NO
+  How to obtain: Go to posthog.com → Create project → Copy API key
+  * NOT required — but it's installed as a dependency and not wired up
+    to any PostHog provider. You'd need to add the PostHog provider component
+    to the Next.js app before the keys would work.
+
+REDIS                      REDIS_URL                                                       YES
+  How to obtain: Redis is a self-hosted dependency (Docker container). No external
+  signup needed. The docker-compose.production.yml already includes a Redis service.
+  In production you may want a managed Redis (Upstash or Redis Labs): ~$0-10/month
+
+APPLICATION                APP_SECRET_KEY                                                  YES
+                           ALLOWED_ORIGINS                                                 YES
+                           FRONTEND_URL                                                    YES
+  How to obtain: Generate APP_SECRET_KEY with `openssl rand -hex 32`
+  ALLOWED_ORIGINS = comma-separated list of allowed CORS origins
+  FRONTEND_URL = public URL of your frontend
+
+DATABASE                   DATABASE_URL                                                    YES
+  How to obtain: Postgres connection string. If using Supabase, this is:
+  postgresql+asyncpg://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
+  Self-hosted: Use the docker-compose.yml Postgres service.
+  Managed: Use Supabase, Railway, or any Postgres provider.
+
+---
+
+3. REQUIRED INFRASTRUCTURE
+============================
+
+Option A — All-in-One VM (simplest, cheapest for beta)
+
+  1 VPS (DigitalOcean, Linode, Hetzner, or similar)
+    Minimum: 2 vCPU, 4 GB RAM, 80 GB SSD
+    Recommended: 4 vCPU, 8 GB RAM, 160 GB SSD
+    Estimated cost: $24-48/month
+    What runs on it: Docker with postgres, redis, API, worker, beat, web
+
+  OR
+
+Option B — Managed Services (more scalable, higher cost)
+
+  Managed Postgres (Supabase free tier or Railway):
+    $0-5/month
+  Managed Redis (Upstash or Redis Labs):
+    $0-10/month
+  App hosting (Railway, Fly.io, or Render):
+    $5-20/month per service (API + Worker + Beat + Web = $20-80/month)
+
+  Estimated total Option B: $20-95/month
+
+---
+
+4. REQUIRED DOMAINS
+=====================
+
+  Root domain:     shouko-ai.app (or your choice)
+  API subdomain:   api.shouko-ai.app
+  App subdomain:   app.shouko-ai.app (or use root for the app)
+
+  DNS Records needed:
+    Type    Name              Value                              TTL
+    ─────────────────────────────────────────────────────────────────
+    A       api.shouko-ai.app  <VPS_IP_ADDRESS>                   300
+    A       app.shouko-ai.app  <VPS_IP_ADDRESS>                   300
+    (or CNAME records if using a platform like Railway/Vercel)
+
+  Optional:
+    CNAME   pdfs.shouko-ai.app <r2-bucket-url>.r2.cloudflarestorage.com   300
+    (for custom R2 public URL — not needed if you use the default R2.dev URL)
+
+  NOTE: For a private beta, you can skip custom domains entirely and use:
+    Frontend: http://<VPS_IP>:3000
+    API:      http://<VPS_IP>:8000
+    You only need domains for a production-facing launch.
+
+---
+
+5. REQUIRED CLOUDFLARE SETUP
+==============================
+
+Only needed if using Cloudflare R2:
+
+  1. Create R2 bucket
+     Bucket name: shouko-pdfs (or whatever you set R2_BUCKET_NAME to)
+     Location: auto (automatic)
+
+  2. Generate R2 API token
+     Permissions: Object Read & Write
+     TTL: No expiration (or set reasonable limit)
+
+  3. (Optional) Set up custom domain for R2
+     In R2 → bucket → Settings → Public URL → Connect custom domain
+     Domain: pdfs.shouko-ai.app
+     This enables: https://pdfs.shouko-ai.app/paper-uuid/original.pdf
+
+  Environment variables:
+    R2_ACCOUNT_ID = Cloudflare Account ID (from Cloudflare dashboard)
+    R2_ACCESS_KEY_ID = From the generated API token
+    R2_SECRET_ACCESS_KEY = From the generated API token
+    R2_BUCKET_NAME = shouko-pdfs
+    R2_PUBLIC_URL = https://pub-xxxxx.r2.dev (from bucket settings)
+                    OR https://pdfs.yourdomain.com if using custom domain
+
+---
+
+6. REQUIRED STRIPE SETUP
+==========================
+
+  Only needed when you launch billing (pro plan). Skip for beta.
+
+  Products to create in Stripe Dashboard:
+    1. Product: "Shouko-AI Pro"
+       Price: Monthly subscription, e.g. $19/month
+       Price ID: Starts with price_ (used as STRIPE_PRO_PRICE_ID)
+
+  Webhook events to configure:
+    Endpoint URL: https://api.shouko-ai.app/billing/webhook
+    Events to listen for:
+      - checkout.session.completed
+      - customer.subscription.updated
+      - customer.subscription.deleted
+      - invoice.paid
+      - invoice.payment_failed
+
+  Test mode setup:
+    Use sk_test_ keys from Stripe dashboard
+    Use card number 4242 4242 4242 4242 for test payments
+    Use whsec_ keys from Stripe webhook test endpoint
+
+---
+
+7. REQUIRED SUPABASE SETUP
+=============================
+
+  1. Create a new Supabase project
+     Project name: shouko-ai
+     Database password: (save this — it's part of DATABASE_URL)
+     Region: Choose closest to your users
+
+  2. Auth providers
+     Email/Password: ENABLED by default — this is what the app uses
+     The app signup/login pages use Supabase Auth UI
+
+  3. Redirect URLs (for auth callbacks)
+     Go to Authentication → URL Configuration:
+     Site URL: http://localhost:3000 (dev) + https://app.shouko-ai.app (prod)
+     Redirect URLs:
+       http://localhost:3000/**
+       https://app.shouko-ai.app/**
+
+  4. SQL migrations
+     The app handles schema via Alembic. You do NOT need to run Supabase
+     migrations. Run from your backend:
+       cd apps/api && alembic upgrade head
+     This creates all tables: users, papers, paper_chunks, artifacts,
+     conversations, annotations, collections, daily_digests, usage_events
+
+  5. Row Level Security
+     NOT configured in the app — the API handles auth at the application
+     level (all DB queries are scoped to user_id). RLS is optional.
+     If you want RLS, you'd need to add policies per table.
+
+  6. Storage buckets
+     NOT needed — PDFs go to Cloudflare R2, not Supabase Storage.
+
+---
+
+8. REQUIRED SECRETS CHECKLIST
+===============================
+
+Copy this table. Fill in "Have It?" as you obtain each key.
+
+| Variable                      | Required | Have It? | Notes                                    |
+|-------------------------------|----------|----------|------------------------------------------|
+| APP_SECRET_KEY                | YES      | [ ]      | Generate: openssl rand -hex 32           |
+| DATABASE_URL                  | YES      | [ ]      | From Supabase or self-hosted Postgres    |
+| SUPABASE_URL                  | YES      | [ ]      | Supabase project settings                |
+| SUPABASE_ANON_KEY             | YES      | [ ]      | Supabase project settings (anon public)  |
+| SUPABASE_SERVICE_ROLE_KEY     | YES      | [ ]      | Supabase project settings (service_role) |
+| OPENROUTER_API_KEY            | YES      | [ ]      | openrouter.ai/keys                       |
+| REDIS_URL                     | YES      | [ ]      | redis://redis:6379 if Docker, else Upstash|
+| ALLOWED_ORIGINS               | YES      | [ ]      | http://localhost:3000,https://app.you.app |
+| FRONTEND_URL                  | YES      | [ ]      | https://app.shouko-ai.app                |
+| R2_ACCOUNT_ID                 | PROD*    | [ ]      | Cloudflare dashboard                     |
+| R2_ACCESS_KEY_ID              | PROD*    | [ ]      | Cloudflare R2 API token                  |
+| R2_SECRET_ACCESS_KEY          | PROD*    | [ ]      | Cloudflare R2 API token                  |
+| R2_BUCKET_NAME                | PROD*    | [ ]      | Create in Cloudflare R2 dashboard        |
+| R2_PUBLIC_URL                 | PROD*    | [ ]      | From bucket settings                     |
+| STRIPE_SECRET_KEY             | OPTIONAL | [ ]      | Stripe dashboard (test or live)          |
+| STRIPE_WEBHOOK_SECRET         | OPTIONAL | [ ]      | Stripe webhook endpoint settings         |
+| STRIPE_PRO_PRICE_ID           | OPTIONAL | [ ]      | Stripe product price ID                  |
+| RESEND_API_KEY                | OPTIONAL | [ ]      | resend.com API keys                      |
+| RESEND_FROM_EMAIL             | OPTIONAL | [ ]      | Verified sender in Resend                |
+| SENTRY_DSN                    | OPTIONAL | [ ]      | sentry.io project settings               |
+| NEXT_PUBLIC_API_URL           | YES      | [ ]      | https://api.shouko-ai.app                |
+| NEXT_PUBLIC_SUPABASE_URL      | YES      | [ ]      | Same as SUPABASE_URL                     |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | YES      | [ ]      | Same as SUPABASE_ANON_KEY                |
+| NEXT_PUBLIC_POSTHOG_KEY       | OPTIONAL | [ ]      | posthog.com project settings             |
+| NEXT_PUBLIC_POSTHOG_HOST      | OPTIONAL | [ ]      | posthog.com project settings             |
+
+* PROD = Required for production, not required for local development
+  (falls back to local filesystem when not set)
+
+---
+
+9. WHAT IS STILL BLOCKING LAUNCH
+==================================
+
+These items require YOUR action. Not coding tasks. Not future features.
+Only accounts, credentials, infrastructure, and deployment resources.
+
+  ORDER  ITEM                                                          EST. TIME
+  ──────────────────────────────────────────────────────────────────────────────
+  1      Create Supabase project and copy URL + API keys              15 min
+  2      Sign up for OpenRouter and create API key                     5 min
+  3      Generate APP_SECRET_KEY (openssl rand -hex 32)                1 min
+  4      Create .env file with the 6 required secrets                  5 min
+  5      Start Docker and run `alembic upgrade head` to create tables  10 min
+  6      Verify backend starts: curl http://localhost:8000/health      2 min
+  7      Verify frontend builds: cd apps/web && npm run build          5 min
+  8      (Optional) Create Cloudflare R2 bucket and API token          15 min
+  9      (Optional) Sign up for Resend and create API key              10 min
+  10     Provision a VPS or sign up for Railway/Fly.io                30 min
+  11     Deploy Docker stack to production VPS                        60 min
+  12     (Optional) Purchase domain and configure DNS                 30 min
+  13     (Optional) Create SSL certificate (Let's Encrypt)             15 min
+  14     (Optional) Set up Stripe products and webhook                20 min
+  15     (Optional) Create Sentry project and copy DSN                 5 min
+
+  Estimated total time to complete all 15 items: ~3.5 hours
+  Time to bare-minimum launch (items 1-7): ~45 minutes
+
+---
+
+10. FINAL OUTPUT — EVERYTHING YOU MUST DO
+============================================
+
+CREATE:
+  • Supabase account + project
+  • OpenRouter account + API key
+  • .env file with secrets
+
+PURCHASE (optional for beta):
+  • VPS ($24-48/month) OR Railway/Fly.io hosting ($5-20/month)
+  • Domain name ($10-15/year) — optional for beta, use IP address
+
+PROVIDE (copy-paste into .env):
+  • APP_SECRET_KEY
+  • DATABASE_URL
+  • SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+  • OPENROUTER_API_KEY
+  • REDIS_URL (redis://redis:6379 if Docker, or Upstash URL)
+  • ALLOWED_ORIGINS
+  • FRONTEND_URL
+
+TOTAL ESTIMATED MONTHLY COST:
+  Bare minimum (free tier everything + $5 hosting):       $5/month
+  Recommended (free tier + $24 VPS):                      $24/month
+  Full production (all managed services + domain):        $45-75/month
+
+EXACT ORDER TO DO THESE TASKS:
+
+  Day 1:
+    1. Create Supabase project → copy 3 keys
+    2. Create OpenRouter account → copy API key
+    3. Create .env file with 6 required keys
+    4. Run `alembic upgrade head` → verify tables created
+    5. Start API → confirm health endpoint responds
+    6. Build frontend → confirm no errors
+
+  Day 2:
+    7. Sign up for VPS or Railway
+    8. Deploy Docker stack (docker-compose.production.yml)
+    9. Verify all 6 containers start with healthy status
+   10. Create Cloudflare R2 bucket (if using R2)
+   11. Set remaining env vars on production host
+
+  Day 3:
+   12. End-to-end smoke test: signup → login → ingest paper → chat
+   13. Set up monitoring (Sentry)
+   14. Configure daily digest email (Resend)
+   15. Open beta to 100 users
+
+================================================================================

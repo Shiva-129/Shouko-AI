@@ -1,0 +1,236 @@
+	================================================================================
+  PRODUCTION LAUNCH BLOCKER FIX SPRINT — COMPLETE SUMMARY
+  Date: 2026-06-12
+================================================================================
+
+All five production launch blockers have been fully implemented and verified.
+17/17 backend tests pass.
+
+---
+
+TASK 1 — FIX DATABASE SCHEMA DRIFT
+-----------------------------------
+
+Drift Found:
+  - artifacts.paper_id foreign key was missing ondelete="CASCADE" in the initial
+    Alembic migration (0001_initial_schema.py), but the SQLAlchemy model had it.
+
+Fix Applied:
+  - Created corrective migration:
+    apps/api/alembic/versions/5a1b2c3d4e5f_fix_artifact_paper_id_cascade.py
+    Revises: 4e8f2c1a6b3d (the latest migration)
+    Drops and recreates the FK constraint with ondelete="CASCADE"
+
+Migration Chain:
+  0001_initial_schema
+  → 960bef3e8fab_add_meta_data_to_papers
+  → 1327a1c5b9d4_switch_to_384d_embeddings
+  → 4e8f2c1a6b3d_switch_to_2048d_embeddings
+  → 5a1b2c3d4e5f_fix_artifact_paper_id_cascade  (NEW)
+
+Verification — No Drift On:
+  - papers.meta_data — model matches migration 960bef3e8fab
+  - papers.updated_at — correctly absent (dropped by 960bef3e8fab)
+  - artifacts.embedding — Vector(2048) matches migration 4e8f2c1a6b3d
+  - paper_chunks.embedding — Vector(2048) matches migration 4e8f2c1a6b3d
+  - All other tables (users, conversations, annotations, collections,
+    daily_digests, usage_events) match their migrations
+
+Report:
+  - docs/schema-drift-report.md — full drift audit with per-table verification
+
+---
+
+TASK 2 — FIX ARTIFACT RETRY FLOW
+---------------------------------
+
+Backend — New Endpoint:
+  - POST /artifacts/{id}/retry in apps/api/routers/artifacts.py
+  - Validates artifact ownership (scoped to current user)
+  - Validates artifact state (only 'failed' status allowed)
+  - Resets status to 'queued', clears error_message, bumps version
+  - Requeues artifact generation via Celery task
+  - Returns updated ArtifactResponse
+
+Frontend — Updated Artifact Page:
+  - apps/web/app/(dashboard)/artifact/[id]/page.tsx
+  - Retry button now calls POST /artifacts/{id}/retry via apiClient
+  - Loading state: button disabled with spinning icon during retry
+  - Success toast on requeue
+  - Destructive toast on failure
+  - Auto-refreshes artifact status after retry (polls every 2s)
+
+---
+
+TASK 3 — REMOVE HARDCODED SECRETS
+----------------------------------
+
+Config Overhaul:
+  - apps/api/core/config.py:
+    * All secrets default to empty strings (no hardcoded values)
+    * Startup validation with @model_validator
+    * REQUIRED_SECRETS (always required): APP_SECRET_KEY, DATABASE_URL,
+      SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
+      OPENROUTER_API_KEY
+    * REQUIRED_PRODUCTION_SECRETS (production only): STRIPE_SECRET_KEY,
+      STRIPE_WEBHOOK_SECRET, STRIPE_PRO_PRICE_ID, RESEND_API_KEY, REDIS_URL
+    * sys.exit(1) on missing secrets — fail fast
+    * Environment "test" skips validation
+
+New Files:
+  - .env.example — comprehensive template with all 19 env vars documented
+
+Renamed Env Vars:
+  - SUPABASE_SERVICE_KEY → SUPABASE_SERVICE_ROLE_KEY (matches Supabase convention)
+  - STRIPE_API_KEY → STRIPE_SECRET_KEY (matches Stripe convention)
+
+Updated Files:
+  - .github/workflows/ci.yml — added all required test env vars
+  - apps/api/tests/conftest.py — env vars set before Settings() import
+  - docs/environment-variables.md — all references to old key names updated
+  - apps/api/services/billing_service.py — STRIPE_API_KEY → STRIPE_SECRET_KEY
+
+---
+
+TASK 4 — IMPLEMENT CLOUDFLARE R2 STORAGE
+-----------------------------------------
+
+New Service:
+  - apps/api/services/storage_service.py
+  - StorageService class with methods:
+    * upload(key, data, content_type) — stores file, returns URL
+    * download(key) — retrieves file bytes
+    * delete(key) — removes file
+    * signed_url(key, expires_in) — generates presigned URL for temp access
+    * exists(key) — checks if key exists
+  - Production: uses boto3 S3-compatible API for Cloudflare R2
+  - Development: falls back to local filesystem (apps/api/scratch/storage/)
+  - Async-safe: all boto3 calls wrapped in asyncio.to_thread()
+
+Integration:
+  - apps/api/services/ingestion_service.py:
+    * After downloading PDF, stores it via storage_service.upload()
+    * Updates paper.pdf_storage_path with the storage URL
+    * Uses local temp file for processing, then discards
+
+Dependencies:
+  - apps/api/requirements.txt — added boto3>=1.34.0
+
+---
+
+TASK 5 — PRODUCTION CONTAINERIZATION
+-------------------------------------
+
+New Dockerfiles:
+  - apps/web/Dockerfile — Multi-stage Next.js standalone build
+    * deps stage: installs production dependencies
+    * builder stage: full build
+    * runner stage: minimal image with standalone output
+    * Uses node:20-alpine, runs as non-root nextjs user
+
+Config Updates:
+  - apps/web/next.config.mjs — added output: "standalone"
+
+Production Docker Compose:
+  - infrastructure/docker-compose.production.yml — 6 services:
+
+    Service     | Image/Context       | Port  | Healthcheck
+    ------------+--------------------+-------+--------------------------
+    postgres    | ankane/pgvector    | 5432  | pg_isready
+    redis       | redis:7-alpine     | 6379  | redis-cli ping
+    api         | ../apps/api        | 8000  | curl /health
+    worker      | ../apps/api        | —     | celery inspect ping
+    beat        | ../apps/api        | —     | (none, depends on redis)
+    web         | ../apps/web        | 3000  | node http.get /
+
+  - All services have:
+    * restart: unless-stopped
+    * Environment injection from host env vars
+    * Health checks with start periods
+    * Persistent volumes for postgres and redis
+    * Isolated bridge network
+
+---
+
+CRITICAL BUG FIXES (from code review)
+--------------------------------------
+
+1. Test Conftest Env Var Timing:
+   - conftest.py was setting environment variables AFTER the Settings()
+     singleton was already initialized at module level
+   - Fix: Moved os.environ.setdefault() calls before all project imports
+   - Now ENVIRONMENT=test is set before Settings() construction, so the
+     validator skips the required secrets check
+
+2. Sync boto3 in Async Methods:
+   - storage_service.py was calling sync boto3 methods (put_object,
+     get_object, etc.) directly inside async def methods
+   - This blocks the asyncio event loop on network I/O
+   - Fix: All boto3 calls wrapped in await asyncio.to_thread()
+
+3. Dead Import:
+   - Frontend artifact page imported useRef from React but never used it
+   - Fix: Changed to useEffect, useState (useState was needed for retrying state)
+
+4. Web Docker Healthcheck:
+   - Used wget which is not available in node:20-alpine
+   - Fix: Changed to node -e with inline http.get() request
+
+5. .env.example Template Prefix:
+   - File started with stray [TEMPLATE] marker
+   - Fix: Removed via sed
+
+6. Stale Config Key Reference:
+   - billing_service.py referenced settings.STRIPE_API_KEY (old name)
+   - Fix: Changed to settings.STRIPE_SECRET_KEY
+
+---
+
+FILES MODIFIED / CREATED
+-------------------------
+
+  NEW:
+    .env.example                           — Comprehensive env template
+    apps/api/services/storage_service.py    — R2 + local storage abstraction
+    apps/web/Dockerfile                     — Next.js standalone build
+    infrastructure/docker-compose.production.yml — 6-service production stack
+    docs/schema-drift-report.md             — Full drift audit
+    apps/api/alembic/versions/5a1b2c3d4e5f_fix_artifact_paper_id_cascade.py
+                                           — Corrective migration
+
+  MODIFIED:
+    apps/api/core/config.py                — No hardcoded secrets, startup validation
+    apps/api/routers/artifacts.py           — Added POST /{id}/retry endpoint
+    apps/api/services/ingestion_service.py  — Integrated R2 storage
+    apps/api/services/billing_service.py    — STRIPE_API_KEY → STRIPE_SECRET_KEY
+    apps/api/requirements.txt               — Added boto3
+    apps/api/tests/conftest.py              — Fixed env var timing
+    apps/web/next.config.mjs                — Added output: "standalone"
+    apps/web/app/(dashboard)/artifact/[id]/page.tsx — Retry UI with proper API call
+    .github/workflows/ci.yml                — Updated env var names
+    docs/environment-variables.md           — Updated key names
+
+---
+
+TEST RESULTS
+-------------
+
+  Command: cd apps/api && python3 -m pytest -x -v
+  Result:  17 passed, 0 failed, 0 errors
+
+  No regressions introduced.
+
+---
+
+DEPLOYMENT INSTRUCTIONS
+------------------------
+
+  1. Copy .env.example to .env and fill in all required values
+  2. Run database migrations:
+       cd apps/api && alembic upgrade head
+  3. Start production stack:
+       docker compose -f infrastructure/docker-compose.production.yml up -d
+  4. Verify health:
+       curl http://localhost:8000/health
+       curl http://localhost:3000/
+================================================================================

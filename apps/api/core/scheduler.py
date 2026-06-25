@@ -1,42 +1,47 @@
-import asyncio
+import logging
 import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from core.config import settings
+from sqlalchemy import create_engine
 
-scheduler = AsyncIOScheduler(timezone="UTC")
+logger = logging.getLogger("core.scheduler")
 
 
-def run_async(coro):
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
 
+def _create_job_store():
+    if settings.DATABASE_URL:
+        sync_url = settings.DATABASE_URL.replace("+asyncpg", "")
+        sync_engine = create_engine(sync_url, pool_pre_ping=True)
+        return SQLAlchemyJobStore(engine=sync_engine)
+    return None
+
+
+scheduler = AsyncIOScheduler(
+    timezone="UTC",
+    jobstores={"default": _create_job_store()} if settings.DATABASE_URL else {},
+)
 
 async def daily_scan_job():
     from tasks.digest_tasks import async_scan_daily_research_papers
     from tasks.digest_tasks import async_compile_and_send_digests
-
-    print("[Scheduler] Running daily ArXiv scan...")
+    logger.info("[Scheduler] Running daily ArXiv scan...")
     try:
         count = await async_scan_daily_research_papers()
-        print(f"[Scheduler] Scan complete: {count} new papers.")
+        logger.info(f"[Scheduler] Scan complete: {count} new papers.")
     except Exception as e:
-        print(f"[Scheduler] Scan failed: {e}")
-
-    print("[Scheduler] Running daily digest compilation...")
+        logger.info(f"[Scheduler] Scan failed: {e}")
+    logger.info("[Scheduler] Running daily digest compilation...")
     try:
         sent = await async_compile_and_send_digests()
-        print(f"[Scheduler] Digests sent: {sent}")
+        logger.info(f"[Scheduler] Digests sent: {sent}")
     except Exception as e:
-        print(f"[Scheduler] Digests failed: {e}")
+        logger.info(f"[Scheduler] Digests failed: {e}")
 
 
 def start_scheduler():
     if settings.ENVIRONMENT == "development":
-        print("[Scheduler] Dev mode — first scan in 10s, then every 24h.")
+        logger.info("[Scheduler] Dev mode — first scan in 10s, then every 24h.")
         scheduler.add_job(
             daily_scan_job,
             trigger="interval",
@@ -47,7 +52,7 @@ def start_scheduler():
         scheduler.add_job(
             daily_scan_job,
             trigger="date",
-            run_date=datetime.datetime.utcnow() + datetime.timedelta(seconds=10),
+            run_date=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=10),
             id="daily_digest_bootstrap",
         )
     else:
@@ -61,10 +66,10 @@ def start_scheduler():
         )
 
     scheduler.start()
-    print("[Scheduler] APScheduler started.")
+    logger.info("[Scheduler] APScheduler started.")
 
 
 def stop_scheduler():
     if scheduler.running:
         scheduler.shutdown(wait=False)
-        print("[Scheduler] APScheduler stopped.")
+        logger.info("[Scheduler] APScheduler stopped.")

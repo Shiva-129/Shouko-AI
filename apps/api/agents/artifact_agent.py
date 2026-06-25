@@ -1,4 +1,5 @@
 import json
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from models.paper import Paper
@@ -8,6 +9,8 @@ from services.llm_service import LLMService
 from prompts.artifact_generation import (
     SYSTEM_PROMPT, build_artifact_prompt, ArtifactOutput,
 )
+
+logger = logging.getLogger("agents.artifact_agent")
 
 
 class ArtifactAgent:
@@ -44,7 +47,7 @@ class ArtifactAgent:
                 await self._store_artifact(artifact_id, validated)
                 return validated
             except Exception as e:
-                print(f"[ArtifactAgent] Attempt {attempt + 1}/3 failed: {e}")
+                logger.info(f"[ArtifactAgent] Attempt {attempt + 1}/3 failed: {e}")
                 if attempt == 2:
                     await self._mark_failed(artifact_id, str(e))
 

@@ -1,19 +1,16 @@
 import pytest
-from unittest.mock import patch
 from models.user import User
 
 @pytest.mark.asyncio
-async def test_get_current_user_profile_authorized(client):
-    headers = {"Authorization": "Bearer mock-token"}
-    response = await client.get("/users/me", headers=headers)
+async def test_get_current_user_profile_authorized(client, auth_headers):
+    response = await client.get("/users/me", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert "email" in data
-    assert data["email"] == "mock@shouko-ai.app"
+    assert data["email"] == "test@shouko-ai.app"
 
 @pytest.mark.asyncio
-async def test_patch_user_profile(client):
-    headers = {"Authorization": "Bearer mock-token"}
+async def test_patch_user_profile(client, auth_headers):
     payload = {
         "name": "Dr. Shouko AI",
         "interest_profile": {
@@ -23,7 +20,7 @@ async def test_patch_user_profile(client):
             "categories": ["cs.CL"]
         }
     }
-    response = await client.patch("/users/me", json=payload, headers=headers)
+    response = await client.patch("/users/me", json=payload, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Dr. Shouko AI"

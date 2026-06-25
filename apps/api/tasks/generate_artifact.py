@@ -8,6 +8,8 @@ from models.artifact import Artifact
 from models.paper import Paper
 from services.ingestion_service import IngestionService
 from agents.artifact_agent import ArtifactAgent
+import logging
+logger = logging.getLogger("tasks.generate_artifact")
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=30)
@@ -28,7 +30,7 @@ async def _run_generation(paper_id: str, artifact_id: str, user_id: str):
             result = await db.execute(select(Artifact).where(Artifact.id == artifact_id))
             artifact = result.scalar_one_or_none()
             if not artifact:
-                print(f"[GenerateArtifact] Artifact {artifact_id} not found")
+                logger.info(f"[GenerateArtifact] Artifact {artifact_id} not found")
                 return
 
             artifact.status = "ingesting"
@@ -45,7 +47,7 @@ async def _run_generation(paper_id: str, artifact_id: str, user_id: str):
 
             if not paper.pdf_processed:
                 ingestion = IngestionService()
-                await ingestion.ingest_paper(db, paper_id, paper.pdf_url)
+                await ingestion.ingest_paper(db, paper_id, paper.pdf_url, user_id=user_id)
 
             artifact.status = "generating"
             await db.flush()
@@ -74,5 +76,5 @@ async def _run_generation(paper_id: str, artifact_id: str, user_id: str):
                 artifact.status = "failed"
                 artifact.error_message = str(e)
                 await db.commit()
-            print(f"[GenerateArtifact] Failed: {e}")
+            logger.info(f"[GenerateArtifact] Failed: {e}")
             raise

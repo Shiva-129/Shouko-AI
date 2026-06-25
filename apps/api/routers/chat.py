@@ -14,6 +14,8 @@ from services.rag_service import RAGService
 from services.llm_service import LLMService
 import json
 import uuid
+import logging
+logger = logging.getLogger("routers.chat")
 
 router = APIRouter(
     prefix="/conversations",
@@ -99,7 +101,6 @@ async def chat_sse_endpoint(
                 async for token in llm_service.stream_chat_response(
                     system_prompt=system_prompt,
                     prompt=user_prompt,
-                    context_chunks=context_chunks
                 ):
                     full_response += token
                     # SSE standard format: "data: <content>\n\n"
@@ -119,7 +120,7 @@ async def chat_sse_endpoint(
                 yield "data: [DONE]\n\n"
 
             except Exception as inner_e:
-                print(f"[SSE Stream Error] {inner_e}")
+                logger.info(f"[SSE Stream Error] {inner_e}")
                 yield f"data: {json.dumps({'error': str(inner_e)})}\n\n"
 
         return StreamingResponse(

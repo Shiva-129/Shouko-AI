@@ -49,7 +49,7 @@ class DailyDigest(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), 
         nullable=False, 
-        default=datetime.datetime.utcnow,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
         server_default=func.now()
     )
 

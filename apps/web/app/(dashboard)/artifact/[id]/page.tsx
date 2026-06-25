@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, Sparkles, MessageSquare, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +17,8 @@ import { useArtifact } from "@/lib/hooks/useArtifact";
 import { useSSEChat } from "@/lib/hooks/useSSEChat";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { apiClient } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 const STATUS_MESSAGES: Record<string, string> = {
   queued: "Queued for processing...",
@@ -30,15 +32,33 @@ export default function ArtifactPage() {
   const id = params.id as string;
   const { data: artifact, isLoading, error, refetch } = useArtifact(id);
   const { messages, isStreaming, sendMessage } = useSSEChat([]);
+  const [retrying, setRetrying] = useState(false);
 
   const isProcessing = artifact && ["queued", "ingesting", "generating"].includes(artifact.status);
 
   useEffect(() => {
-    if (isProcessing) {
+    if (isProcessing || (!retrying && artifact?.status === "queued")) {
       const interval = setInterval(() => refetch(), 2000);
       return () => clearInterval(interval);
     }
-  }, [isProcessing, refetch]);
+  }, [isProcessing, retrying, artifact?.status, refetch]);
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    try {
+      await apiClient.post(`/artifacts/${id}/retry`);
+      refetch();
+      toast({ title: "Retry queued", description: "Artifact generation has been requeued." });
+    } catch (err) {
+      toast({
+        title: "Retry failed",
+        description: err instanceof Error ? err.message : "Failed to retry artifact generation.",
+        variant: "destructive",
+      });
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   if (error) {
     return (
@@ -133,12 +153,11 @@ export default function ArtifactPage() {
                 variant="outline"
                 size="sm"
                 className="gap-1"
-                onClick={() => {
-                  fetch(`/api/artifacts/${id}/retry`, { method: "POST" });
-                }}
+                onClick={handleRetry}
+                disabled={retrying}
               >
-                <RotateCcw className="h-3 w-3" />
-                Retry
+                <RotateCcw className={`h-3 w-3 ${retrying ? "animate-spin" : ""}`} />
+                {retrying ? "Retrying..." : "Retry"}
               </Button>
             </CardContent>
           </Card>

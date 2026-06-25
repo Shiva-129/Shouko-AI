@@ -2,11 +2,14 @@ import datetime
 from datetime import timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from core.config import settings
 from models.user import User
 from models.paper import Paper
 from models.digest import DailyDigest
 from services.email_service import EmailService
 from agents.discovery_agent import DiscoveryAgent
+import logging
+logger = logging.getLogger("services.digest_service")
 
 
 class DigestService:
@@ -21,7 +24,7 @@ class DigestService:
         user_res = await self.db.execute(select(User).where(User.id == user_id))
         user = user_res.scalar_one_or_none()
         if not user:
-            print(f"[DigestService] User {user_id} not found.")
+            logger.info(f"[DigestService] User {user_id} not found.")
             return None
 
         cutoff = datetime.datetime.now(timezone.utc) - datetime.timedelta(hours=48)
@@ -30,7 +33,7 @@ class DigestService:
         )
         papers = papers_res.scalars().all()
         if not papers:
-            print("[DigestService] No recent papers.")
+            logger.info("[DigestService] No recent papers.")
             return None
 
         profile = user.interest_profile or {}
@@ -60,7 +63,7 @@ class DigestService:
         filtered.sort(key=lambda x: x["score"], reverse=True)
 
         if not filtered:
-            print(f"[DigestService] No papers scored >= {min_score} for {user.email}.")
+            logger.info(f"[DigestService] No papers scored >= {min_score} for {user.email}.")
             return None
 
         recommendations = []
@@ -74,6 +77,7 @@ class DigestService:
                     "match_score": s["score"],
                     "reason": s.get("reason", ""),
                     "paper_id": s["paper_id"],
+                    "url": f"{settings.FRONTEND_URL}/digest/{date.isoformat()}",
                 })
 
         existing_res = await self.db.execute(

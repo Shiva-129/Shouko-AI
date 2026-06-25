@@ -2,11 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { StreamingMessage } from "./StreamingMessage";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import type { Message } from "@/types";
 
 interface MessageListProps {
   messages: Message[];

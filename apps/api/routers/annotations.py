@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select
 from core.dependencies import get_db
 from core.security import get_current_user
 from models.annotation import Annotation
 from models.artifact import Artifact
 from models.user import User
 import uuid
-import datetime
 
 router = APIRouter(
     prefix="/annotations",
@@ -81,24 +80,24 @@ async def create_annotation(
 @router.get("", response_model=list[AnnotationResponse])
 async def list_annotations(
     artifact_id: str | None = Query(None, description="Optional filter by artifact ID"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """
-    List all annotations owned by the user, optionally filtered by artifact ID.
-    """
     query = select(Annotation).where(Annotation.user_id == user.id)
-    
     if artifact_id:
         try:
             artifact_uuid = uuid.UUID(artifact_id)
             query = query.where(Annotation.artifact_id == artifact_uuid)
         except ValueError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid artifact_id format")
-
-    result = await db.execute(query.order_by(Annotation.created_at.desc()))
+    result = await db.execute(
+        query.order_by(Annotation.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
     annotations = result.scalars().all()
-
     return [
         AnnotationResponse(
             id=str(a.id),

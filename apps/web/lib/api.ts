@@ -21,19 +21,15 @@ export class ApiError extends Error {
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  try {
-    const { createClient } = await import("@/lib/supabase");
-    const supabase = createClient();
-    if (supabase) {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.access_token) {
-        return { Authorization: `Bearer ${data.session.access_token}` };
-      }
+  const { createClient } = await import("@/lib/supabase");
+  const supabase = createClient();
+  if (supabase) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.access_token) {
+      return { Authorization: `Bearer ${data.session.access_token}` };
     }
-  } catch {
-    // Not running in browser or Supabase not configured
   }
-  return { Authorization: "Bearer mock-token" };
+  return {};
 }
 
 export async function api<T = unknown>(

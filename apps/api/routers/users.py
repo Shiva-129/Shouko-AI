@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -6,10 +6,8 @@ from core.dependencies import get_db
 from core.security import get_current_user
 from core.usage import get_monthly_count, get_daily_count, MONTHLY_LIMITS, DAILY_LIMITS
 from models.user import User
-import datetime
-from services.email_service import EmailService
-
-email_service = EmailService()
+import logging
+logger = logging.getLogger("routers.users")
 
 router = APIRouter(
     prefix="/users",
@@ -55,15 +53,6 @@ async def get_current_user_profile(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if user.onboarded_at is None:
-        if isinstance(user, User):
-            user.onboarded_at = datetime.datetime.utcnow()
-            await db.commit()
-            await db.refresh(user)
-        else:
-            user.onboarded_at = datetime.datetime.utcnow()
-        await email_service.send_welcome_email(user.email, user.name or "Researcher")
-
     plan = user.plan or "free"
     usage = {
         "artifact_created_monthly": await get_monthly_count(db, user.id, "artifact_created"),
@@ -73,7 +62,6 @@ async def get_current_user_profile(
         "paper_ingested_monthly": await get_monthly_count(db, user.id, "paper_ingested"),
         "paper_ingested_limit": MONTHLY_LIMITS.get(plan, {}).get("paper_ingested"),
     }
-
     return UserResponse(
         id=str(user.id),
         email=user.email,
@@ -96,7 +84,7 @@ async def update_current_user_profile(
     if payload.name is not None:
         user.name = payload.name
     if payload.interest_profile is not None:
-        current_profile = user.interest_profile or {}
+        current_profile = dict(user.interest_profile or {})
         current_profile.update(payload.interest_profile.model_dump())
         user.interest_profile = current_profile
 

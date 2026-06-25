@@ -1,3 +1,4 @@
+from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, DateTime, Numeric, ForeignKey, UniqueConstraint, CheckConstraint, ARRAY, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -78,7 +79,7 @@ class Artifact(Base):
         server_default="1"
     )
     
-    generation_cost_usd: Mapped[float | None] = mapped_column(
+    generation_cost_usd: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 6), 
         nullable=True
     )
@@ -86,14 +87,14 @@ class Artifact(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), 
         nullable=False, 
-        default=datetime.datetime.utcnow,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
         server_default=func.now()
     )
     updated_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), 
         nullable=False, 
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+        onupdate=lambda: datetime.datetime.now(datetime.timezone.utc),
         server_default=func.now()
     )
 

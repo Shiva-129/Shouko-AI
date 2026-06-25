@@ -14,7 +14,7 @@ class RAGService:
         inside a specific paper using pgvector's cosine distance operator.
         """
         # 1. Embed the query text
-        embeddings = await self.embedding_service.get_embeddings([query_text])
+        embeddings = await self.embedding_service.get_embeddings([query_text], input_type="query")
         query_embedding = embeddings[0]
 
         # 2. Perform pgvector similarity search

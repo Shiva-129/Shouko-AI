@@ -4,11 +4,7 @@ import { MessageSquare } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import type { Message } from "@/types";
 
 interface ChatPanelProps {
   artifactId: string;

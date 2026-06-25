@@ -3,25 +3,32 @@ from jose import jwk
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from core.config import settings
-from core.dependencies import MockUser
+from core.supabase_utils import normalize_supabase_url
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
 from sqlalchemy import select
 from models.user import User
 import httpx
-import json
+import time
 import uuid
+import logging
+
+logger = logging.getLogger("core.security")
 
 SECURITY_SCHEME = HTTPBearer(auto_error=False)
 
-SUPABASE_JWKS_URL = f"{settings.SUPABASE_URL}/.well-known/jwks.json" if settings.SUPABASE_URL else None
+_supabase_base = normalize_supabase_url(settings.SUPABASE_URL) if settings.SUPABASE_URL else None
+SUPABASE_JWKS_URL = f"{_supabase_base}/auth/v1/.well-known/jwks.json" if _supabase_base else None
 
 _jwks_cache: list[dict] | None = None
+_jwks_cache_ts: float = 0.0
+JWKS_CACHE_TTL: float = 3600.0  # 1 hour
 
 
 async def _fetch_jwks() -> list[dict]:
-    global _jwks_cache
-    if _jwks_cache is not None:
+    global _jwks_cache, _jwks_cache_ts
+    now = time.time()
+    if _jwks_cache is not None and (now - _jwks_cache_ts) < JWKS_CACHE_TTL:
         return _jwks_cache
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -29,9 +36,10 @@ async def _fetch_jwks() -> list[dict]:
             resp.raise_for_status()
             data = resp.json()
             _jwks_cache = data.get("keys", [])
+            _jwks_cache_ts = now
             return _jwks_cache
     except Exception as e:
-        print(f"[Security] Failed to fetch JWKS: {e}")
+        logger.info(f"[Security] Failed to fetch JWKS: {e}")
         return []
 
 
@@ -52,25 +60,26 @@ async def verify_supabase_jwt(token: str) -> dict | None:
             return None
 
         public_key = jwk.construct(matching_key)
+        # SECURITY-TODO: Enable audience verification once the correct `aud` value is determined.
+        # Supabase JWTs typically use `"authenticated"` or the project URL.
+        # Set `audience=settings.SUPABASE_URL` and remove `options={"verify_aud": False}`.
         payload = jwt.decode(
             token,
             public_key,
-            algorithms=["RS256"],
+            algorithms=["RS256", "ES256"],
             options={"verify_aud": False}
         )
         return payload
     except JWTError as e:
-        print(f"[Security] JWT validation failed: {e}")
+        logger.info(f"[Security] JWT validation failed: {e}")
         return None
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(SECURITY_SCHEME),
     db: AsyncSession = Depends(get_db),
-) -> User | MockUser:
+) -> User:
     if credentials is None:
-        if settings.ENVIRONMENT == "development":
-            return MockUser()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing authorization header",
@@ -79,13 +88,8 @@ async def get_current_user(
 
     token = credentials.credentials
 
-    if settings.ENVIRONMENT == "development" and token == "mock-token":
-        return MockUser()
-
     payload = await verify_supabase_jwt(token)
     if payload is None:
-        if settings.ENVIRONMENT == "development":
-            return MockUser()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -99,7 +103,13 @@ async def get_current_user(
             detail="Token missing subject claim",
         )
 
-    user_id = uuid.UUID(sub) if isinstance(sub, str) else sub
+    try:
+        user_id = uuid.UUID(sub) if isinstance(sub, str) else sub
+    except (ValueError, AttributeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user identifier in authentication token."
+        )
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
@@ -108,10 +118,19 @@ async def get_current_user(
         user = User(
             id=user_id,
             email=email,
+            name=payload.get("user_metadata", {}).get("full_name"),
+            onboarded_at=datetime.datetime.now(datetime.timezone.utc),
             interest_profile={"topics": [], "keywords": [], "authors": [], "categories": []},
         )
         db.add(user)
         await db.commit()
         await db.refresh(user)
+        # Send welcome email asynchronously — fire-and-forget
+        try:
+            from services.email_service import EmailService
+            email_svc = EmailService()
+            await email_svc.send_welcome_email(user.email, user.name or "Researcher")
+        except Exception:
+            pass
 
     return user

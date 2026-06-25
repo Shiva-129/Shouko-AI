@@ -8,13 +8,26 @@ from core.usage import log_usage_event, check_usage_limit
 from core.rate_limit import RateLimit
 from models.paper import Paper
 from models.user import User
+import asyncio
 from services.ingestion_service import IngestionService
-import uuid
 
 router = APIRouter(
     prefix="/papers",
     tags=["Papers & Ingestion"]
 )
+
+def sanitize_arxiv_id(val: str) -> str:
+    val = val.strip()
+    if "arxiv.org" in val:
+        for marker in ("/abs/", "/pdf/"):
+            if marker in val:
+                val = val.split(marker)[-1]
+                break
+        if val.endswith(".pdf"):
+            val = val[:-4]
+    if val.lower().startswith("arxiv:"):
+        val = val[6:]
+    return val.strip()
 
 class PaperIngestRequest(BaseModel):
     title: str | None = Field(None, description="The title of the academic paper")
@@ -37,7 +50,7 @@ async def ingest_paper_endpoint(
     """
     Trigger the PDF ingestion flow. 
     Registers the paper in the database if new, downloads it, segments it 
-    into searchable chunks, and generates 1536-dimensional semantic search vectors.
+    into searchable chunks, and generates 2048-dimensional semantic search vectors.
     """
     try:
         allowed, msg = await check_usage_limit(db, user, "paper_ingested")
@@ -45,6 +58,8 @@ async def ingest_paper_endpoint(
             raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=msg)
 
         arxiv_id = payload.arxiv_id
+        if arxiv_id:
+            arxiv_id = sanitize_arxiv_id(arxiv_id)
         title = payload.title
         pdf_url = payload.pdf_url
 
@@ -65,6 +80,12 @@ async def ingest_paper_endpoint(
                 if isinstance(e, HTTPException):
                     raise
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to fetch metadata from ArXiv: {str(e)}")
+        # Validate PDF URL scheme
+        if pdf_url:
+            if not pdf_url.startswith(("http://", "https://")):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PDF URL must use http or https scheme.")
+            if len(pdf_url) > 2048:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="PDF URL exceeds maximum length.")
 
         if not title or not pdf_url:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title and PDF URL are required (or a valid ArXiv ID)")
@@ -92,7 +113,7 @@ async def ingest_paper_endpoint(
             
         # Execute Ingestion flow
         ingestion_service = IngestionService()
-        ingest_result = await ingestion_service.ingest_paper(db, paper.id, pdf_url)
+        ingest_result = await ingestion_service.ingest_paper(db, paper.id, pdf_url, user_id=str(user.id))
         
         await log_usage_event(db, user.id, "paper_ingested", {"paper_id": str(paper.id)})
         await db.commit()
@@ -106,6 +127,8 @@ async def ingest_paper_endpoint(
         )
 
     except HTTPException:
+        raise
+    except (asyncio.CancelledError, KeyboardInterrupt):
         raise
     except Exception as e:
         raise HTTPException(

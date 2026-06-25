@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from core.database import get_db
+from core.dependencies import get_db
 from core.security import get_current_user
 from models.collection import Collection
 from models.artifact import Artifact
@@ -51,14 +51,16 @@ class CollectionDetailResponse(BaseModel):
 
 @router.get("", response_model=list[CollectionResponse])
 async def list_collections(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """
-    List all collections owned by the authenticated user.
-    """
     result = await db.execute(
-        select(Collection).where(Collection.user_id == user.id).order_by(Collection.created_at.desc())
+        select(Collection).where(Collection.user_id == user.id)
+        .order_by(Collection.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
     )
     collections = result.scalars().all()
     return [

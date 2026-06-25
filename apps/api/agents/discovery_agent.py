@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from services.llm_service import LLMService
 from prompts.discovery import SYSTEM_PROMPT, build_user_prompt, DiscoveryOutput
 from core.config import settings
+import logging
+logger = logging.getLogger("agents.discovery_agent")
 
 
 class DiscoveryAgent:
@@ -58,7 +60,7 @@ class DiscoveryAgent:
                     self._validate_scores(scores)
                     return scores
             except Exception as e:
-                print(f"[DiscoveryAgent] Groq scoring failed: {e}")
+                logger.info(f"[DiscoveryAgent] Groq scoring failed: {e}")
 
         # Fallback: LLMService (Gemini via OpenRouter)
         try:
@@ -75,7 +77,7 @@ class DiscoveryAgent:
                 self._validate_scores(scores)
                 return scores
         except Exception as e:
-            print(f"[DiscoveryAgent] LLMService scoring failed: {e}")
+            logger.info(f"[DiscoveryAgent] LLMService scoring failed: {e}")
 
         return self._score_fallback(papers_data, profile)
 

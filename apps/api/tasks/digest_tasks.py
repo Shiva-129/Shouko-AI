@@ -9,6 +9,8 @@ from models.user import User
 from models.paper import Paper
 from services.digest_service import DigestService
 from agents.discovery_agent import DiscoveryAgent
+import logging
+logger = logging.getLogger("tasks.digest_tasks")
 
 def run_async(coro):
     """
@@ -30,7 +32,7 @@ def scan_daily_research_papers():
     return run_async(async_scan_daily_research_papers())
 
 async def async_scan_daily_research_papers():
-    print("[Celery Task] Running daily research scan...")
+    logger.info("[Celery Task] Running daily research scan...")
     async with AsyncSessionLocal() as db:
         # 1. Fetch active categories from all users
         res = await db.execute(select(User))
@@ -46,45 +48,54 @@ async def async_scan_daily_research_papers():
 
         # 2. Build query
         query_str = " OR ".join([f"cat:{c}" for c in categories])
-        print(f"[Celery Task] Dispatching ArXiv search query: {query_str}")
+        logger.info(f"[Celery Task] Dispatching ArXiv search query: {query_str}")
 
+        loop = asyncio.get_event_loop()
         client = arxiv.Client()
         search = arxiv.Search(
             query=query_str,
             max_results=100,
             sort_by=arxiv.SortCriterion.SubmittedDate
         )
-
         ingested_count = 0
         try:
-            for result in client.results(search):
-                arxiv_id = result.entry_id.split("/")[-1].split("v")[0] if result.entry_id else None
-                existing_res = await db.execute(
-                    select(Paper).where(
-                        (Paper.arxiv_id == arxiv_id) | (Paper.title == result.title)
+            results = await loop.run_in_executor(None, lambda: list(client.results(search)))
+            for result in results:
+                try:
+                    # Parse arxiv_id robustly
+                    arxiv_id = None
+                    if result.entry_id:
+                        parts = result.entry_id.rstrip("/").split("/")
+                        if parts:
+                            arxiv_id = parts[-1].split("v")[0] if "v" in parts[-1] else parts[-1]
+                    existing_res = await db.execute(
+                        select(Paper).where(
+                            (Paper.arxiv_id == arxiv_id) | (Paper.title == result.title)
+                        )
                     )
-                )
-                if existing_res.scalar_one_or_none():
+                    if existing_res.scalar_one_or_none():
+                        continue
+                    paper = Paper(
+                        arxiv_id=arxiv_id,
+                        title=result.title,
+                        authors=[a.name for a in result.authors],
+                        abstract=result.summary,
+                        pdf_url=result.pdf_url,
+                        categories=list(result.categories) if result.categories else [],
+                        published_date=result.published.date() if result.published else None,
+                        pdf_processed=False
+                    )
+                    db.add(paper)
+                    ingested_count += 1
+                except Exception as inner_e:
+                    logger.info(f"[Celery Task] Skipping paper '{getattr(result, 'title', 'unknown')}': {inner_e}")
                     continue
 
-                paper = Paper(
-                    arxiv_id=arxiv_id,
-                    title=result.title,
-                    authors=[a.name for a in result.authors],
-                    abstract=result.summary,
-                    pdf_url=result.pdf_url,
-                    categories=list(result.categories) if result.categories else [],
-                    published_date=result.published.date() if result.published else None,
-                    pdf_processed=False
-                )
-                db.add(paper)
-                ingested_count += 1
-
             await db.commit()
-            print(f"[Celery Task] Research scan complete. Successfully registered {ingested_count} new academic papers.")
+            logger.info(f"[Celery Task] Research scan complete. Successfully registered {ingested_count} new academic papers.")
             return ingested_count
         except Exception as e:
-            print(f"[Celery Task] Error running daily research scan: {e}")
+            logger.info(f"[Celery Task] Error running daily research scan: {e}")
             return 0
 
 
@@ -96,13 +107,13 @@ def compile_and_send_digests():
     return run_async(async_compile_and_send_digests())
 
 async def async_compile_and_send_digests():
-    print("[Celery Task] Compiling and sending user digests...")
+    logger.info("[Celery Task] Compiling and sending user digests...")
     today = datetime.date.today()
     async with AsyncSessionLocal() as db:
         res = await db.execute(select(User))
         users = res.scalars().all()
         if not users:
-            print("[Celery Task] No users registered in database.")
+            logger.info("[Celery Task] No users registered in database.")
             return 0
 
         digest_service = DigestService(db)
@@ -114,7 +125,7 @@ async def async_compile_and_send_digests():
                 if digest and digest.status == "sent":
                     sent_count += 1
             except Exception as e:
-                print(f"[Celery Task] Failed compile for user {user.email}: {e}")
+                logger.info(f"[Celery Task] Failed compile for user {user.email}: {e}")
 
-        print(f"[Celery Task] Daily digest execution complete. Sent out {sent_count} user digests.")
+        logger.info(f"[Celery Task] Daily digest execution complete. Sent out {sent_count} user digests.")
         return sent_count

@@ -7,8 +7,7 @@ from models.artifact import Artifact
 from models.annotation import Annotation
 
 @pytest.mark.asyncio
-async def test_annotations_crud(client):
-    headers = {"Authorization": "Bearer mock-token"}
+async def test_annotations_crud(client, auth_headers):
     
     paper_id = uuid.uuid4()
     artifact_id = uuid.uuid4()
@@ -46,7 +45,7 @@ async def test_annotations_crud(client):
             "meta_data": {"page": 2, "section": "Introduction"}
         }
         
-        response = await client.post("/annotations", json=payload, headers=headers)
+        response = await client.post("/annotations", json=payload, headers=auth_headers)
         assert response.status_code == 201
         data = response.json()
         assert data["content"] == payload["content"]
@@ -55,12 +54,12 @@ async def test_annotations_crud(client):
         annotation_id = data["id"]
 
         # 2. Get Single Annotation
-        get_resp = await client.get(f"/annotations/{annotation_id}", headers=headers)
+        get_resp = await client.get(f"/annotations/{annotation_id}", headers=auth_headers)
         assert get_resp.status_code == 200
         assert get_resp.json()["content"] == payload["content"]
 
         # 3. List Annotations
-        list_resp = await client.get(f"/annotations?artifact_id={artifact_id}", headers=headers)
+        list_resp = await client.get(f"/annotations?artifact_id={artifact_id}", headers=auth_headers)
         assert list_resp.status_code == 200
         assert len(list_resp.json()) == 1
         assert list_resp.json()[0]["id"] == annotation_id
@@ -70,7 +69,7 @@ async def test_annotations_crud(client):
             "content": "Updated content: self-attention scales quadratically.",
             "meta_data": {"page": 3}
         }
-        up_resp = await client.put(f"/annotations/{annotation_id}", json=update_payload, headers=headers)
+        up_resp = await client.put(f"/annotations/{annotation_id}", json=update_payload, headers=auth_headers)
         assert up_resp.status_code == 200
         assert up_resp.json()["content"] == update_payload["content"]
         assert up_resp.json()["meta_data"]["page"] == 3
@@ -78,7 +77,7 @@ async def test_annotations_crud(client):
         assert up_resp.json()["meta_data"]["section"] == "Introduction"
 
         # 5. Delete Annotation
-        del_resp = await client.delete(f"/annotations/{annotation_id}", headers=headers)
+        del_resp = await client.delete(f"/annotations/{annotation_id}", headers=auth_headers)
         assert del_resp.status_code == 204
         annotation_id = None
     finally:

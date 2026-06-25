@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FileText, Sparkles, Building2, Clock, Loader2 } from "lucide-react";
+import { FileText, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreateArtifact } from "@/lib/hooks/useArtifact";
 import { useState } from "react";

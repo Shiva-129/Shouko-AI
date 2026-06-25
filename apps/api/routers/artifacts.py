@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from core.database import get_db
 from core.security import get_current_user
-from core.usage import check_usage_limit, log_usage_event
+from core.usage import check_usage_limit
 from core.rate_limit import RateLimit
 from models.artifact import Artifact
 from models.paper import Paper
@@ -213,6 +213,56 @@ async def create_artifact(
         paper_title=paper.title,
         status=artifact.status,
         created_at=artifact.created_at.isoformat() if artifact.created_at else None,
+    )
+
+
+@router.post("/{artifact_id}/retry", response_model=ArtifactResponse)
+async def retry_artifact(
+    artifact_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Retry a failed artifact generation. Only artifacts with status 'failed' can be retried.
+    Requeues the artifact generation task and resets the status to 'queued'.
+    """
+    result = await db.execute(
+        select(Artifact).where(Artifact.id == artifact_id, Artifact.user_id == user.id)
+    )
+    artifact = result.scalar_one_or_none()
+    if not artifact:
+        raise HTTPException(status_code=404, detail="Artifact not found")
+
+    if artifact.status != "failed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot retry artifact with status '{artifact.status}'. Only 'failed' artifacts can be retried.",
+        )
+
+    # Reset artifact state
+    artifact.status = "queued"
+    artifact.error_message = None
+    artifact.version += 1
+    await db.commit()
+    await db.refresh(artifact)
+
+    # Requeue the generation task
+    generate_artifact.delay(
+        paper_id=str(artifact.paper_id),
+        artifact_id=str(artifact.id),
+        user_id=str(user.id),
+    )
+
+    paper_result = await db.execute(select(Paper).where(Paper.id == artifact.paper_id))
+    paper = paper_result.scalar_one_or_none()
+
+    return ArtifactResponse(
+        id=str(artifact.id),
+        paper_id=str(artifact.paper_id),
+        paper_title=paper.title if paper else None,
+        status=artifact.status,
+        created_at=artifact.created_at.isoformat() if artifact.created_at else None,
+        updated_at=artifact.updated_at.isoformat() if artifact.updated_at else None,
     )
 
 
