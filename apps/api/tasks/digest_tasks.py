@@ -122,7 +122,7 @@ async def async_compile_and_send_digests():
         for user in users:
             try:
                 digest = await digest_service.compile_user_daily_digest(user.id, today)
-                if digest and digest.status == "sent":
+                if digest:
                     sent_count += 1
             except Exception as e:
                 logger.info(f"[Celery Task] Failed compile for user {user.email}: {e}")

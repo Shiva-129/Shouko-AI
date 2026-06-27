@@ -23,14 +23,9 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/login">
-            <Button variant="ghost" className="text-xs font-mono text-secondaryText hover:text-primaryText hover:bg-workspace">
-              Sign In
-            </Button>
-          </Link>
-          <Link href="/signup">
+          <Link href="/dashboard">
             <Button size="sm" className="bg-lime text-workspace hover:bg-lime/90 font-bold text-xs shadow-[0_0_15px_rgba(200,240,74,0.3)] transition-all">
-              Get Started
+              Start Researching
             </Button>
           </Link>
         </div>
@@ -53,15 +48,10 @@ export default function LandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-5">
-          <Link href="/signup">
+          <Link href="/dashboard">
             <Button size="lg" className="bg-lime text-workspace hover:bg-lime/90 font-bold text-sm px-8 py-6 rounded-xl shadow-[0_0_20px_rgba(200,240,74,0.2)] hover:shadow-[0_0_30px_rgba(200,240,74,0.4)] transition-all">
               Start Researching Free
               <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button size="lg" variant="outline" className="border-border bg-workspace text-primaryText hover:bg-card hover:text-primaryText font-mono text-xs px-8 py-6 rounded-xl transition-all">
-              Access Workspace
             </Button>
           </Link>
         </div>
@@ -143,7 +133,7 @@ export default function LandingPage() {
               </li>
             </ul>
 
-            <Link href="/signup" className="w-full mt-auto">
+            <Link href="/dashboard" className="w-full mt-auto">
               <Button variant="outline" className="w-full border-border bg-card text-primaryText hover:bg-border font-bold">
                 Get Started Free
               </Button>
@@ -181,7 +171,7 @@ export default function LandingPage() {
               </li>
             </ul>
 
-            <Link href="/signup" className="w-full mt-auto">
+            <Link href="/dashboard" className="w-full mt-auto">
               <Button className="w-full bg-lime text-workspace hover:bg-lime/90 font-bold shadow-[0_0_15px_rgba(200,240,74,0.2)]">
                 Upgrade to Pro
               </Button>

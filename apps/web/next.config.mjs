@@ -2,14 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-      },
-    ],
-  },
 };
 
 export default nextConfig;

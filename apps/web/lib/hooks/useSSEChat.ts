@@ -3,21 +3,6 @@ import type { Message } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const { createClient } = await import("@/lib/supabase");
-  const supabase = createClient();
-  if (supabase) {
-    const { data } = await supabase.auth.getSession();
-    if (data.session?.access_token) {
-      return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${data.session.access_token}`,
-      };
-    }
-  }
-  return { "Content-Type": "application/json" };
-}
-
 export function useSSEChat(initialMessages: Message[] = []) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -28,10 +13,9 @@ export function useSSEChat(initialMessages: Message[] = []) {
     setIsStreaming(true);
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
     try {
-      const headers = await getAuthHeaders();
       const response = await fetch(`${API_BASE}/conversations/${artifactId}/chat`, {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userText }),
       });
       if (!response.ok || !response.body) {

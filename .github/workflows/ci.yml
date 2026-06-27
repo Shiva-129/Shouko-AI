@@ -59,9 +59,6 @@ jobs:
       env:
         DATABASE_URL: postgresql+asyncpg://shouko:supersecretpassword@localhost:5432/shouko
         REDIS_URL: redis://localhost:6379/0
-        SUPABASE_URL: https://example.supabase.co
-        SUPABASE_ANON_KEY: dummy-anon-key
-        SUPABASE_SERVICE_ROLE_KEY: dummy-service-role-key
         APP_SECRET_KEY: test-secret-key-for-ci-only-32chars!!
         OPENROUTER_API_KEY: dummy-key
       run: |
@@ -94,8 +91,6 @@ jobs:
     - name: Build Web Application
       env:
         NEXT_PUBLIC_API_URL: http://localhost:8000
-        NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
       run: |
         cd apps/web
         npm run build

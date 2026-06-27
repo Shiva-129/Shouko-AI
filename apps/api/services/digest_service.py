@@ -2,11 +2,9 @@ import datetime
 from datetime import timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from core.config import settings
 from models.user import User
 from models.paper import Paper
 from models.digest import DailyDigest
-from services.email_service import EmailService
 from agents.discovery_agent import DiscoveryAgent
 import logging
 logger = logging.getLogger("services.digest_service")
@@ -15,7 +13,6 @@ logger = logging.getLogger("services.digest_service")
 class DigestService:
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.email_service = EmailService()
         self.discovery_agent = DiscoveryAgent(db)
 
     async def compile_user_daily_digest(
@@ -66,20 +63,6 @@ class DigestService:
             logger.info(f"[DigestService] No papers scored >= {min_score} for {user.email}.")
             return None
 
-        recommendations = []
-        for s in filtered:
-            p = paper_map.get(s["paper_id"])
-            if p:
-                recommendations.append({
-                    "title": p.title,
-                    "abstract": p.abstract or "No abstract provided.",
-                    "category": p.categories[0] if p.categories else "General",
-                    "match_score": s["score"],
-                    "reason": s.get("reason", ""),
-                    "paper_id": s["paper_id"],
-                    "url": f"{settings.FRONTEND_URL}/digest/{date.isoformat()}",
-                })
-
         existing_res = await self.db.execute(
             select(DailyDigest).where(
                 DailyDigest.user_id == user.id,
@@ -99,17 +82,7 @@ class DigestService:
             self.db.add(digest)
             await self.db.flush()
 
-        email_sent = await self.email_service.send_digest(
-            to_email=user.email,
-            user_name=user.name or user.email.split("@")[0],
-            recommendations=recommendations,
-        )
-
-        if email_sent:
-            digest.status = "sent"
-            digest.email_sent_at = datetime.datetime.now(timezone.utc)
-        else:
-            digest.status = "ready"
+        digest.status = "ready"
 
         await self.db.commit()
         return digest

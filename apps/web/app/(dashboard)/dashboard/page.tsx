@@ -10,7 +10,6 @@ import { Sparkles, ArrowRight, FileText, MessageSquare, BookOpen, Loader2 } from
 import { useUser } from "@/lib/hooks/useUser";
 import { useDigest } from "@/lib/hooks/useDigest";
 import { PaperCard } from "@/components/digest/PaperCard";
-import { UsageBanner } from "@/components/billing/UsageBanner";
 import { apiClient } from "@/lib/api";
 
 export default function DashboardPage() {
@@ -66,23 +65,10 @@ export default function DashboardPage() {
     );
   }
 
-  const usage = profile?.usage;
-  let nearingLimitType = "";
-  if (usage) {
-    if (usage.artifact_created_limit && (usage.artifact_created_monthly / usage.artifact_created_limit) >= 0.8) {
-      nearingLimitType = "Artifact Creation";
-    } else if (usage.paper_ingested_limit && (usage.paper_ingested_monthly / usage.paper_ingested_limit) >= 0.8) {
-      nearingLimitType = "Paper Ingestion";
-    } else if (usage.question_asked_limit && (usage.question_asked_daily / usage.question_asked_limit) >= 0.8) {
-      nearingLimitType = "Questions Asked";
-    }
-  }
-
   const topPapers = digest?.papers?.slice(0, 3) ?? [];
 
   return (
     <div className="flex-1 bg-workspace flex flex-col min-w-0 p-8 select-none">
-      {nearingLimitType && <UsageBanner limitType={nearingLimitType} />}
       <h1 className="font-syne font-extrabold text-[32px] text-primaryText tracking-tight mb-6">
         Dashboard
       </h1>

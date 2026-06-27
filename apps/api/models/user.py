@@ -20,9 +20,6 @@ class User(Base):
         server_default="free"
     )
     
-    stripe_customer_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
-    stripe_subscription_id: Mapped[str | None] = mapped_column(String, nullable=True)
-    
     interest_profile: Mapped[dict] = mapped_column(
         JSONB, 
         nullable=False, 
@@ -45,6 +42,4 @@ class User(Base):
         server_default=func.now()
     )
 
-    __table_args__ = (
-        CheckConstraint(plan.in_(["free", "pro", "team", "enterprise"]), name="check_plan_type"),
-    )
+

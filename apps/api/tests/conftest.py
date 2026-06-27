@@ -9,15 +9,12 @@ import os
 # ── Set test env vars BEFORE any project imports ──
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("APP_SECRET_KEY", "test-secret-key-for-ci-only-32chars!!")
-os.environ.setdefault("SUPABASE_ANON_KEY", "dummy-anon-key")
-os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "dummy-service-role-key")
 os.environ.setdefault("OPENROUTER_API_KEY", "dummy-key")
 
 # Now safe to import project modules (Settings() will see the env vars above)
 import pytest
 import pytest_asyncio
 import httpx
-from unittest.mock import patch
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from core.config import settings
@@ -101,17 +98,6 @@ def mock_rate_limit():
          patch("routers.papers.check_usage_limit", return_value=(True, None)), \
          patch("routers.artifacts.check_usage_limit", return_value=(True, None)), \
          patch("core.rate_limit.RateLimiter.is_rate_limited", return_value=False):
-        yield
-
-@pytest_asyncio.fixture(autouse=True)
-async def auth_user():
-    mock_payload = {
-        "sub": str(TEST_USER_ID),
-        "email": TEST_USER_EMAIL,
-    }
-    async def mock_verify(token: str):
-        return mock_payload
-    with patch("core.security.verify_supabase_jwt", side_effect=mock_verify):
         yield
 
 @pytest_asyncio.fixture

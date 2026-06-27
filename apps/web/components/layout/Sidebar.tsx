@@ -8,10 +8,8 @@ import {
   BookOpen,
   FolderClosed,
   Settings,
-  LogOut,
   Menu,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
@@ -24,15 +22,6 @@ const navItems = [
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
-    router.push("/login");
-    onNavigate?.();
-  };
 
   const handleNavigation = (href: string) => {
     router.push(href);
@@ -79,13 +68,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <Settings className="h-4 w-4 shrink-0 text-secondaryText" />
           <span>Settings</span>
         </button>
-        <button
-          onClick={handleSignOut}
-          className="w-full py-2 px-3 rounded-[6px] text-secondaryText hover:text-red-400 transition-all flex items-center gap-3 text-xs text-left"
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          <span>Sign out</span>
-        </button>
+
       </div>
     </div>
   );
